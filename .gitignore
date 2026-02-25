@@ -1,0 +1,22 @@
+# Model checkpoints
+*.h5
+*.pkl
+
+# Data files (too large for GitHub)
+*.npy
+*.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
