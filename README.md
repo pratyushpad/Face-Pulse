@@ -82,5 +82,5 @@ This will train all 4 models, save the best checkpoints as `.h5` files, and save
 - How to compare multiple models and interpret confusion matrices
 
 ## Author
-Pratyush Padhy — First Year CS Student  
+Pratyush Padhy — UCI CS Student  
 [GitHub](https://github.com/Pratyushpad27) · [LinkedIn](https://www.linkedin.com/in/pratyush-padhy-b7017a269/)
