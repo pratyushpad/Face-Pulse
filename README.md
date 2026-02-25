@@ -58,7 +58,7 @@ pip install tensorflow numpy pandas scikit-learn opencv-python matplotlib seabor
 
 **3. Add the data files**
 
-Download the FER2013 dataset from Kaggle and run the preprocessing steps in `notebook.ipynb` to generate `pureX.npy`, `dataX.npy`, and `dataY.npy`.
+Download the FER2013 dataset from Kaggle and run the preprocessing steps in model.py to generate `pureX.npy`, `dataX.npy`, and `dataY.npy`.
 
 **4. Train all models**
 ```bash
@@ -83,4 +83,4 @@ This will train all 4 models, save the best checkpoints as `.h5` files, and save
 
 ## Author
 Pratyush Padhy — First Year CS Student  
-[GitHub](https://github.com/YOUR_USERNAME) · [LinkedIn](https://linkedin.com/in/YOUR_USERNAME)
+[GitHub](https://github.com/Pratyushpad27) · [LinkedIn](https://www.linkedin.com/in/pratyush-padhy-b7017a269/)
