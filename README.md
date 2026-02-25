@@ -84,3 +84,24 @@ This will train all 4 models, save the best checkpoints as `.h5` files, and save
 ## Author
 Pratyush Padhy — UCI CS Student  
 [GitHub](https://github.com/Pratyushpad27) · [LinkedIn](https://www.linkedin.com/in/pratyush-padhy-b7017a269/)
+
+## Results
+
+### MLP (Pixel Inputs)
+![MLP Pixel Training](mlp_pixel_training.png)
+![MLP Pixel Confusion Matrix](mlp_pixel_confusion_matrix.png)
+
+### MLP (Landmark Inputs)
+![MLP Landmarks Training](mlp_landmarks_training.png)
+![MLP Landmark Confusion Matrix](mlp_landmark_confusion_matrix.png)
+
+### CNN
+![CNN Training](cnn_training.png)
+![CNN Confusion Matrix](cnn_confusion_matrix.png)
+
+### VGG16 Transfer Learning
+![VGG16 Training](vgg16_transfer_learning_training.png)
+![VGG16 Confusion Matrix](vgg16_confusion_matrix.png)
+
+### Model Comparison
+![Model Comparison](model_comparison.png)
