@@ -58,7 +58,7 @@ pip install tensorflow numpy pandas scikit-learn opencv-python matplotlib seabor
 
 **3. Add the data files**
 
-Download the FER2013 dataset from Kaggle and run the preprocessing steps in model.py to generate `pureX.npy`, `dataX.npy`, and `dataY.npy`.
+Download the FER2013 dataset from Kaggle and run the preprocessing steps in data_prep.py to generate `pureX.npy`, `dataX.npy`, and `dataY.npy`.
 
 **4. Train all models**
 ```bash
