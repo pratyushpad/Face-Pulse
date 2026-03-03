@@ -5,7 +5,7 @@
  * try the detect-image endpoint by uploading a photo.
  */
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { FadeUpSection } from '../components/FadeUpSection'
 import { GlowCard } from '../components/GlowCard'
 import { GlowButton } from '../components/GlowButton'
@@ -184,6 +184,13 @@ export function ApiDocs() {
   const [tryLoading, setTryLoading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Revoke Object URL on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
 
   async function handleTry() {
     const file = fileRef.current?.files?.[0]
