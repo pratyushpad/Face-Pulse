@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: emovision-api
+    runtime: docker
+    dockerfilePath: web-app/backend/Dockerfile
+    dockerContext: web-app/backend
+    plan: free
+    envVars:
+      - key: MODEL_PATH
+        value: /app/best_vgg_model.h5
+      - key: CORS_ORIGIN
+        sync: false  # set this in Render dashboard to your Netlify URL

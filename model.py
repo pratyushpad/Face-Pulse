@@ -5,15 +5,17 @@ Detects 5 emotions from facial images using:
   - MLP on raw pixel inputs
   - MLP on facial landmark distances
   - CNN
-  - Transfer Learning (VGG16)
+  - Transfer Learning (VGG16, 2-phase fine-tuning)
 
 Dataset: FER2013 (Facial Expression Recognition)
 """
 
+import json
 import numpy as np
 import warnings
 warnings.filterwarnings('ignore')
 
+from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import confusion_matrix
@@ -31,20 +33,25 @@ from tensorflow.keras.layers import (Dense, Dropout, Conv2D, MaxPooling2D,
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from tensorflow.keras.applications import VGG16
 
 # ─────────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────────
 
-EPOCHS = 20
+EPOCHS = 20              # epochs for MLP and CNN
+EPOCHS_VGG_PHASE1 = 15  # VGG16 phase 1: frozen base, train head only
+EPOCHS_VGG_PHASE2 = 15  # VGG16 phase 2: fine-tune block4 + block5
 BATCH_SIZE = 64
 TEST_RATIO = 0.1
 N_LABELS = 5
 IMG_WIDTH, IMG_HEIGHT = 48, 48
 
 EMOTION_LABELS = ['Angry', 'Fear', 'Happy', 'Sad', 'Surprise']
+
+# Where to save normalization params for the web app backend
+NORM_PARAMS_PATH = Path(__file__).parent / "web-app" / "backend" / "normalization_params.json"
 
 
 # ─────────────────────────────────────────────
@@ -69,6 +76,8 @@ def load_data():
 def preprocess_data(dataX_pixels, dataX_landmarks, y_onehot):
     """
     Split into train/test sets and standardize both feature types.
+    Also saves pixel StandardScaler params so the backend uses
+    exact training-time normalization (instead of the /255 fallback).
     """
     # Pixel data split
     X_train, X_test, y_train, y_test = train_test_split(
@@ -77,6 +86,9 @@ def preprocess_data(dataX_pixels, dataX_landmarks, y_onehot):
     pixel_scaler = StandardScaler()
     X_train = pixel_scaler.fit_transform(X_train)
     X_test = pixel_scaler.transform(X_test)
+
+    # Save scaler params for the backend so inference matches training normalization
+    _save_normalization_params(pixel_scaler, dataX_pixels)
 
     # Landmark data split
     X_train_lm, X_test_lm, y_train_lm, y_test_lm = train_test_split(
@@ -88,6 +100,23 @@ def preprocess_data(dataX_pixels, dataX_landmarks, y_onehot):
 
     return (X_train, X_test, y_train, y_test,
             X_train_lm, X_test_lm, y_train_lm, y_test_lm)
+
+
+def _save_normalization_params(scaler: StandardScaler, X_raw: np.ndarray) -> None:
+    """Save StandardScaler mean/std to JSON for the web backend."""
+    params = {
+        "mean": scaler.mean_.tolist(),
+        "std": scaler.scale_.tolist(),
+        "n_samples": int(len(X_raw)),
+        "n_features": int(X_raw.shape[1]),
+    }
+    try:
+        NORM_PARAMS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(NORM_PARAMS_PATH, "w") as f:
+            json.dump(params, f)
+        print(f"Saved normalization params → {NORM_PARAMS_PATH}")
+    except Exception as e:
+        print(f"Warning: could not save normalization params: {e}")
 
 
 def reshape_for_cnn(X_train, X_test):
@@ -158,12 +187,12 @@ def build_cnn():
 def build_vgg_transfer():
     """
     Transfer learning using VGG16 pretrained on ImageNet.
+    Phase 1 starts fully frozen; phase 2 unfreezes block4 + block5.
     Top layers replaced for 5-class emotion classification.
     """
-    # VGG16 expects RGB (3-channel) images, so we resize
     base_model = VGG16(weights='imagenet', include_top=False,
                        input_shape=(48, 48, 3))
-    base_model.trainable = False  # freeze pretrained weights
+    base_model.trainable = False  # frozen for phase 1
 
     model = Sequential([
         base_model,
@@ -198,6 +227,96 @@ def train_model(model, X_train, y_train, X_test, y_test, checkpoint_name):
         callbacks=[checkpoint]
     )
     return history
+
+
+def train_vgg_with_finetune(model, X_train_vgg, y_train, X_test_vgg, y_test,
+                             checkpoint_name):
+    """
+    Two-phase VGG16 training strategy:
+
+    Phase 1 (EPOCHS_VGG_PHASE1 epochs):
+        VGG16 base fully frozen — only the Dense head learns.
+        Uses data augmentation (flips, shifts, zoom) to combat FER2013 noise.
+
+    Phase 2 (EPOCHS_VGG_PHASE2 epochs):
+        Unfreeze block4 + block5 of VGG16 and fine-tune with a 10× lower
+        learning rate (1e-5) so the pretrained features adapt gently to
+        48×48 emotion images without catastrophic forgetting.
+
+    Returns a merged history object covering all epochs.
+    """
+    # Data augmentation — applied only to training data
+    augmentor = tf.keras.preprocessing.image.ImageDataGenerator(
+        rotation_range=10,
+        width_shift_range=0.1,
+        height_shift_range=0.1,
+        horizontal_flip=True,
+        zoom_range=0.1,
+    )
+
+    callbacks_p1 = [
+        ModelCheckpoint(checkpoint_name, monitor='val_accuracy',
+                        save_best_only=True, mode='max', verbose=1),
+        ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3,
+                          min_lr=1e-6, verbose=1),
+    ]
+
+    # ── Phase 1: frozen base ──
+    print(f"\n--- VGG16 Phase 1: Training head only ({EPOCHS_VGG_PHASE1} epochs) ---")
+    steps = len(X_train_vgg) // BATCH_SIZE
+    history1 = model.fit(
+        augmentor.flow(X_train_vgg, y_train, batch_size=BATCH_SIZE),
+        steps_per_epoch=steps,
+        epochs=EPOCHS_VGG_PHASE1,
+        validation_data=(X_test_vgg, y_test),
+        callbacks=callbacks_p1,
+    )
+
+    # ── Phase 2: unfreeze block4 + block5 ──
+    print(f"\n--- VGG16 Phase 2: Fine-tuning block4 + block5 ({EPOCHS_VGG_PHASE2} epochs) ---")
+    vgg_base = model.layers[0]  # VGG16 is first layer of Sequential
+    FINETUNE_LAYERS = {
+        'block4_conv1', 'block4_conv2', 'block4_conv3', 'block4_pool',
+        'block5_conv1', 'block5_conv2', 'block5_conv3', 'block5_pool',
+    }
+    for layer in vgg_base.layers:
+        layer.trainable = layer.name in FINETUNE_LAYERS
+
+    # Must recompile after changing trainability
+    model.compile(
+        loss=categorical_crossentropy,
+        optimizer=Adam(learning_rate=1e-5),  # 10× lower than phase 1
+        metrics=['accuracy']
+    )
+
+    callbacks_p2 = [
+        ModelCheckpoint(checkpoint_name, monitor='val_accuracy',
+                        save_best_only=True, mode='max', verbose=1),
+        EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True),
+    ]
+
+    history2 = model.fit(
+        augmentor.flow(X_train_vgg, y_train, batch_size=BATCH_SIZE),
+        steps_per_epoch=steps,
+        epochs=EPOCHS_VGG_PHASE2,
+        validation_data=(X_test_vgg, y_test),
+        callbacks=callbacks_p2,
+    )
+
+    # Merge both histories for plotting
+    return _merge_histories(history1, history2)
+
+
+class _MergedHistory:
+    """Thin wrapper combining two Keras History objects for plotting."""
+    def __init__(self, h1, h2):
+        self.history = {}
+        for key in h1.history:
+            self.history[key] = h1.history[key] + h2.history.get(key, [])
+
+
+def _merge_histories(h1, h2):
+    return _MergedHistory(h1, h2)
 
 
 # ─────────────────────────────────────────────
@@ -301,14 +420,15 @@ if __name__ == '__main__':
     plot_training(cnn_history, 'CNN')
     plot_confusion_matrix(cnn_model, X_test_cnn, y_test, 'CNN Confusion Matrix')
 
-    # --- Model 4: Transfer Learning (VGG16) ---
-    print("\n--- Training VGG16 Transfer Learning ---")
-    # VGG16 needs 3-channel images
+    # --- Model 4: Transfer Learning (VGG16) with 2-phase fine-tuning ---
+    print("\n--- Training VGG16 Transfer Learning (2-phase fine-tuning) ---")
     X_train_vgg = np.repeat(X_train_cnn, 3, axis=3)
     X_test_vgg = np.repeat(X_test_cnn, 3, axis=3)
     vgg_model = build_vgg_transfer()
-    vgg_history = train_model(vgg_model, X_train_vgg, y_train,
-                               X_test_vgg, y_test, 'best_vgg_model.h5')
+    vgg_history = train_vgg_with_finetune(
+        vgg_model, X_train_vgg, y_train,
+        X_test_vgg, y_test, 'best_vgg_model.h5'
+    )
     plot_training(vgg_history, 'VGG16 Transfer Learning')
     plot_confusion_matrix(vgg_model, X_test_vgg, y_test, 'VGG16 Confusion Matrix')
 
