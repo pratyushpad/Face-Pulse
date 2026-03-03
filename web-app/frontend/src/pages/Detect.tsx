@@ -7,7 +7,7 @@
  * - Cleaner layout without the standalone header (Navbar handles that)
  */
 
-import { useRef, useCallback, useEffect} from 'react'
+import { useRef, useCallback, useEffect, type RefObject } from 'react'
 import { useCamera } from '../hooks/useCamera'
 import { useEmotionDetection } from '../hooks/useEmotionDetection'
 import { useSessionStats } from '../hooks/useSessionStats'
