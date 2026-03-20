@@ -61,8 +61,7 @@ const ARCHITECTURE_STEPS = [
     tag: 'Feature Extractor',
   },
   { label: 'Global Avg Pool', desc: 'Reduces 7×7×512 → 512-dim feature vector', tag: 'Pooling' },
-  { label: 'Dense 256', desc: 'FC layer with ReLU + BatchNorm + Dropout 0.5', tag: 'Head' },
-  { label: 'Dense 128', desc: 'FC layer with ReLU + Dropout 0.3', tag: 'Head' },
+  { label: 'Dense 256', desc: 'FC layer with ReLU + Dropout 0.5', tag: 'Head' },
   { label: 'Output', desc: 'Softmax over 5 emotion classes', tag: 'Output' },
 ]
 
@@ -308,7 +307,7 @@ export function ModelInfo() {
                 label: 'Training Config',
                 items: [
                   ['Epochs', '20'],
-                  ['Batch size', '32'],
+                  ['Batch size', '64'],
                   ['Optimizer', 'Adam (lr=1e-4)'],
                   ['Loss', 'Categorical Cross-Entropy'],
                   ['Callback', 'ModelCheckpoint (best val_acc)'],

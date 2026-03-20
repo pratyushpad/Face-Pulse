@@ -1,21 +1,7 @@
-/**
- * useSessionStats — computes aggregated session statistics from detection history.
- *
- * Recalculates every SESSION_STATS_INTERVAL_MS using a setInterval,
- * so it doesn't recompute on every single 500ms detection tick.
- */
-
 import { useState, useEffect, useCallback } from 'react'
 import type { EmotionDataPoint, SessionStats, EmotionKey } from '../types'
 import { SESSION_STATS_INTERVAL_MS } from '../constants'
 
-/**
- * Compute full session statistics from the current detection history.
- *
- * @param history - Array of all EmotionDataPoints recorded this session.
- * @param sessionStartMs - Unix timestamp (ms) when the session started.
- * @returns A populated SessionStats object.
- */
 function computeStats(
   history: EmotionDataPoint[],
   sessionStartMs: number
@@ -38,7 +24,7 @@ function computeStats(
     }
   }
 
-  // ── Dominant emotion (most frequent) ──────────────────────────────────────
+  // Most frequent emotion
   const emotionCounts: Record<string, number> = {}
   for (const point of history) {
     emotionCounts[point.dominant] = (emotionCounts[point.dominant] ?? 0) + 1
@@ -50,7 +36,7 @@ function computeStats(
     (emotionCounts[dominantEmotion] / totalDetections) * 100
   )
 
-  // ── Volatility: fraction of consecutive pairs where emotion changed ────────
+  // Volatility = fraction of consecutive frames where emotion changed
   let changes = 0
   for (let i = 1; i < history.length; i++) {
     if (history[i].dominant !== history[i - 1].dominant) changes++
@@ -60,7 +46,7 @@ function computeStats(
       ? parseFloat((changes / (history.length - 1)).toFixed(2))
       : 0
 
-  // ── Current streak ─────────────────────────────────────────────────────────
+  // Current streak
   const currentStreakEmotion = history[history.length - 1].dominant
   let streakCount = 0
   for (let i = history.length - 1; i >= 0; i--) {
@@ -70,12 +56,11 @@ function computeStats(
       break
     }
   }
-  // Each detection is ~500ms apart
   const currentStreakSeconds = Math.round(
     (streakCount * 500) / 1000
   )
 
-  // ── Happiest moment ────────────────────────────────────────────────────────
+  // Peak happiness
   let happiestMoment: number | null = null
   let peakHappiness = 0
   for (const point of history) {
@@ -99,13 +84,6 @@ function computeStats(
   }
 }
 
-/**
- * Custom hook for computing and periodically refreshing session statistics.
- *
- * @param history - Detection history from useEmotionDetection.
- * @param isActive - Whether a session is currently in progress.
- * @returns Current SessionStats and the session start timestamp.
- */
 export function useSessionStats(
   history: EmotionDataPoint[],
   isActive: boolean
@@ -116,19 +94,16 @@ export function useSessionStats(
     computeStats([], sessionStartMs)
   )
 
-  /** Recompute stats from current history snapshot. */
   const refresh = useCallback((): void => {
     setStats(computeStats(history, sessionStartMs))
   }, [history, sessionStartMs])
 
-  // Refresh immediately when history changes length (new data point)
   useEffect(() => {
     if (history.length > 0) {
       refresh()
     }
   }, [history.length, refresh])
 
-  // Also refresh on a timer while session is active
   useEffect(() => {
     if (!isActive) return
     const timer = window.setInterval(refresh, SESSION_STATS_INTERVAL_MS)

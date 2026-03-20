@@ -1,7 +1,3 @@
-/**
- * AnimatedCounter — counts up from 0 to a target value with easing.
- */
-
 import { useEffect, useRef, useState } from 'react'
 
 interface AnimatedCounterProps {
@@ -28,7 +24,6 @@ export function AnimatedCounter({
     function step(now: number) {
       const elapsed = now - startTime
       const progress = Math.min(elapsed / duration, 1)
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3)
       setDisplay(value * eased)
       if (progress < 1) {

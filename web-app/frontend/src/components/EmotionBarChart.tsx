@@ -1,13 +1,3 @@
-/**
- * EmotionBarChart — horizontal bar chart showing live emotion probability scores.
- *
- * Updates every time latestResult changes (every ~500ms when detection is running).
- * Color-codes each bar per EMOTION_COLORS; dominant emotion bar is full opacity,
- * others are rendered at 60% opacity.
- *
- * Uses Chart.js 4 + react-chartjs-2.
- */
-
 import { useMemo } from 'react'
 import { Bar } from 'react-chartjs-2'
 import type { ChartOptions, ChartData } from 'chart.js'
@@ -21,31 +11,21 @@ import {
 } from '../constants'
 
 interface EmotionBarChartProps {
-  /** Most recent detection result from the backend. */
   latestResult: DetectionResult | null
 }
 
-/**
- * Real-time horizontal bar chart of emotion confidence scores.
- *
- * Renders all emotion classes returned by the backend (5 or 7 classes),
- * animating smoothly as probabilities change on each detection tick.
- */
 export function EmotionBarChart({ latestResult }: EmotionBarChartProps) {
-  /** Build Chart.js dataset from the current detection result. */
   const chartData: ChartData<'bar'> = useMemo(() => {
     const emotions = latestResult?.emotions ?? {}
     const dominant = latestResult?.dominant ?? ''
 
-    // Build sorted list: all keys present in this result
     const keys = Object.keys(emotions)
-
     const labels = keys.map((k) => EMOTION_LABELS[k] ?? k)
     const values = keys.map((k) => Math.round((emotions[k as keyof typeof emotions] ?? 0) * 100))
 
     const backgroundColors = keys.map((k) => {
       const base = EMOTION_COLORS[k] ?? '#6b7280'
-      return k === dominant ? base : base + '99' // 60% opacity for non-dominant
+      return k === dominant ? base : base + '99'
     })
 
     const borderColors = keys.map((k) => EMOTION_COLORS[k] ?? '#6b7280')

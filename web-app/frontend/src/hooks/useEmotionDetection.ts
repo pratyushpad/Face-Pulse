@@ -1,10 +1,3 @@
-/**
- * useEmotionDetection — drives the 500ms detection loop.
- *
- * Captures frames from the video element, POSTs them to the FastAPI backend,
- * and maintains a rolling history of EmotionDataPoints for the timeline chart.
- */
-
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { DetectionResult, EmotionDataPoint } from '../types'
 import {
@@ -13,35 +6,17 @@ import {
   MAX_HISTORY_POINTS,
 } from '../constants'
 
-/** Return shape of the useEmotionDetection hook. */
 interface EmotionDetectionState {
-  /** Most recent detection result from the backend. */
   latestResult: DetectionResult | null
-  /** Rolling history of the last MAX_HISTORY_POINTS detections. */
   history: EmotionDataPoint[]
-  /** Whether the detection interval is currently running. */
   isDetecting: boolean
-  /** Whether a backend request is currently in-flight. */
   isLoading: boolean
-  /** Last error message from a failed request. */
   error: string | null
-  /** Start the 500ms detection interval. */
   startDetection: () => void
-  /** Stop the detection interval and clear the interval handle. */
   stopDetection: () => void
-  /** Clear all session history and the latest result. */
   resetHistory: () => void
 }
 
-/**
- * Custom hook that manages the real-time emotion detection pipeline.
- *
- * Captures frames via a temporary canvas, sends them to /api/detect,
- * and returns the latest result plus a rolling history buffer.
- *
- * @param videoRef - Ref to the live <video> element to capture frames from.
- * @returns EmotionDetectionState
- */
 export function useEmotionDetection(
   videoRef: React.RefObject<HTMLVideoElement>
 ): EmotionDetectionState {
@@ -53,12 +28,7 @@ export function useEmotionDetection(
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  /**
-   * Capture a JPEG snapshot from the current video frame.
-   * Uses a temporary off-screen canvas — does NOT draw to the overlay.
-   *
-   * @returns Base64 data URL (image/jpeg at 0.8 quality), or null if video not ready.
-   */
+  // Grab a JPEG frame from the video element via an offscreen canvas
   const captureFrame = useCallback((): string | null => {
     const video = videoRef.current
     if (
@@ -80,10 +50,6 @@ export function useEmotionDetection(
     return canvas.toDataURL('image/jpeg', 0.8)
   }, [videoRef])
 
-  /**
-   * Send one frame to the backend and update state with the result.
-   * Silently skips if no frame is available (video not ready).
-   */
   const runDetection = useCallback(async (): Promise<void> => {
     const frame = captureFrame()
     if (!frame) return
@@ -105,7 +71,6 @@ export function useEmotionDetection(
       const result: DetectionResult = await response.json()
       setLatestResult(result)
 
-      // Only record data points when a face is actually detected
       if (result.face_detected && result.dominant) {
         const point: EmotionDataPoint = {
           timestamp: Date.now(),
@@ -128,16 +93,13 @@ export function useEmotionDetection(
     }
   }, [captureFrame])
 
-  /** Start the detection interval. No-op if already running. */
   const startDetection = useCallback((): void => {
     if (intervalRef.current !== null) return
     setIsDetecting(true)
-    // Run once immediately, then on interval
     runDetection()
     intervalRef.current = window.setInterval(runDetection, DETECTION_INTERVAL_MS)
   }, [runDetection])
 
-  /** Stop the detection interval and clear the handle. */
   const stopDetection = useCallback((): void => {
     if (intervalRef.current !== null) {
       clearInterval(intervalRef.current)
@@ -147,14 +109,12 @@ export function useEmotionDetection(
     setIsLoading(false)
   }, [])
 
-  /** Clear all session data (history and latest result). */
   const resetHistory = useCallback((): void => {
     setHistory([])
     setLatestResult(null)
     setError(null)
   }, [])
 
-  // Cleanup interval on unmount
   useEffect(() => {
     return () => {
       if (intervalRef.current !== null) {

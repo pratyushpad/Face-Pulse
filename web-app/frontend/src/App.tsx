@@ -1,11 +1,3 @@
-/**
- * App — root component with React Router + AnimatePresence page transitions.
- *
- * Layout:
- *   <Navbar /> is rendered globally above all pages.
- *   Each page is wrapped in a motion.div for fade+slide transitions.
- */
-
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Navbar } from './components/Navbar'
@@ -15,7 +7,6 @@ import { Analytics } from './pages/Analytics'
 import { ModelInfo } from './pages/ModelInfo'
 import { ApiDocs } from './pages/ApiDocs'
 
-/** Page transition wrapper — applied to every route. */
 function PageWrapper({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
@@ -29,7 +20,6 @@ function PageWrapper({ children }: { children: React.ReactNode }) {
   )
 }
 
-/** Inner component so we can call useLocation (requires Router context). */
 function AnimatedRoutes() {
   const location = useLocation()
 

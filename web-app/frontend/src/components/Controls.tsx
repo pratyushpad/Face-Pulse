@@ -1,41 +1,18 @@
-/**
- * Controls — action bar with start/stop, snapshot, reset, and camera select.
- *
- * Sits at the top of the page and is always visible.
- * Passes all actions up to the parent via callbacks.
- */
-
 import type { ChangeEvent } from 'react'
 
 interface ControlsProps {
-  /** Whether the detection loop is currently running. */
   isDetecting: boolean
-  /** Whether the webcam stream is active. */
   isStreamActive: boolean
-  /** List of available camera devices. */
   cameras: MediaDeviceInfo[]
-  /** Currently active camera device ID. */
   selectedCameraId: string
-  /** Error message from camera or detection. */
   error: string | null
-  /** Start the webcam + detection. */
   onStart: () => void
-  /** Stop the detection loop. */
   onStop: () => void
-  /** Switch to a different camera device. */
   onSwitchCamera: (deviceId: string) => void
-  /** Capture a snapshot of the current frame + overlay. */
   onSnapshot: () => void
-  /** Clear all session history. */
   onReset: () => void
 }
 
-/**
- * Control bar component for managing detection state and camera input.
- *
- * Renders a horizontal strip with all primary actions. The Start/Stop button
- * changes appearance and text based on current detection state.
- */
 export function Controls({
   isDetecting,
   isStreamActive,
@@ -48,7 +25,6 @@ export function Controls({
   onSnapshot,
   onReset,
 }: ControlsProps) {
-  /** Handle camera select dropdown change. */
   const handleCameraChange = (e: ChangeEvent<HTMLSelectElement>): void => {
     onSwitchCamera(e.target.value)
   }
@@ -63,7 +39,6 @@ export function Controls({
       )}
 
       <div className="flex flex-wrap items-center gap-3">
-        {/* Start / Stop detection button */}
         <button
           onClick={isDetecting ? onStop : onStart}
           className={[
@@ -86,7 +61,6 @@ export function Controls({
           )}
         </button>
 
-        {/* Snapshot button — only usable when stream is active */}
         <button
           onClick={onSnapshot}
           disabled={!isStreamActive}
@@ -96,7 +70,6 @@ export function Controls({
           📸 Snapshot
         </button>
 
-        {/* Reset session button */}
         <button
           onClick={onReset}
           title="Clear session history"
@@ -105,7 +78,6 @@ export function Controls({
           ↺ Reset
         </button>
 
-        {/* Camera select dropdown */}
         {cameras.length > 1 && (
           <div className="ml-auto">
             <select
@@ -122,7 +94,6 @@ export function Controls({
           </div>
         )}
 
-        {/* Live indicator dot */}
         {isDetecting && (
           <div className="flex items-center gap-1.5 ml-auto">
             <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />

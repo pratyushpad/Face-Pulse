@@ -1,10 +1,3 @@
-/**
- * SessionSummary — displays aggregated statistics for the current session.
- *
- * Shows dominant emotion, volatility, current streak, happiest moment,
- * and total session duration. Updates every SESSION_STATS_INTERVAL_MS.
- */
-
 import { useMemo } from 'react'
 import type { SessionStats } from '../types'
 import {
@@ -14,11 +7,9 @@ import {
 } from '../constants'
 
 interface SessionSummaryProps {
-  /** Computed session stats from useSessionStats hook. */
   stats: SessionStats
 }
 
-/** Format seconds into a human-readable duration string (e.g. "1m 23s"). */
 function formatDuration(totalSeconds: number): string {
   if (totalSeconds < 60) return `${totalSeconds}s`
   const minutes = Math.floor(totalSeconds / 60)
@@ -26,7 +17,6 @@ function formatDuration(totalSeconds: number): string {
   return `${minutes}m ${seconds.toString().padStart(2, '0')}s`
 }
 
-/** Format a past timestamp into a "N seconds ago" string. */
 function formatTimeAgo(timestamp: number): string {
   const seconds = Math.round((Date.now() - timestamp) / 1000)
   if (seconds < 60) return `${seconds}s ago`
@@ -34,7 +24,6 @@ function formatTimeAgo(timestamp: number): string {
   return `${minutes}m ago`
 }
 
-/** A single stat card with label, value, and optional color accent. */
 function StatCard({
   label,
   value,
@@ -67,12 +56,6 @@ function StatCard({
   )
 }
 
-/**
- * Session summary panel displaying key emotional metrics.
- *
- * Renders a grid of stat cards built from SessionStats.
- * Cards have color accents matching the relevant emotion.
- */
 export function SessionSummary({ stats }: SessionSummaryProps) {
   const isEmpty = stats.totalDetections === 0
 

@@ -1,12 +1,3 @@
-/**
- * Detect — live emotion detection page at /detect.
- *
- * Upgrades the original Home.tsx with:
- * - DominantEmotionDisplay strip for at-a-glance emotion reading
- * - localStorage session persistence for the Analytics page
- * - Cleaner layout without the standalone header (Navbar handles that)
- */
-
 import { useRef, useCallback, useEffect} from 'react'
 import { useCamera } from '../hooks/useCamera'
 import { useEmotionDetection } from '../hooks/useEmotionDetection'
@@ -20,10 +11,8 @@ import { Controls } from '../components/Controls'
 import { DominantEmotionDisplay } from '../components/DominantEmotionDisplay'
 import type { EmotionDataPoint } from '../types'
 
-/** localStorage key for the last recorded session history. */
 const SESSION_KEY = 'emovision_last_session'
 
-/** Persist the history array to localStorage (overwrites previous session). */
 function saveSession(history: EmotionDataPoint[]): void {
   if (history.length === 0) return
   try {
@@ -36,7 +25,6 @@ function saveSession(history: EmotionDataPoint[]): void {
 export function Detect() {
   const cameraFeedRef = useRef<CameraFeedHandle>(null)
 
-  // ── Camera stream ──────────────────────────────────────────────────────────
   const {
     videoRef,
     isStreamActive,
@@ -48,7 +36,6 @@ export function Detect() {
     switchCamera,
   } = useCamera()
 
-  // ── Emotion detection ──────────────────────────────────────────────────────
   const {
     latestResult,
     history,
@@ -59,17 +46,16 @@ export function Detect() {
     resetHistory,
   } = useEmotionDetection(videoRef)
 
-  // ── Session statistics ─────────────────────────────────────────────────────
   const { stats } = useSessionStats(history, isDetecting)
 
-  // ── Persist session to localStorage when detection stops ───────────────────
+  // Save session to localStorage when detection stops
   useEffect(() => {
     if (!isDetecting && history.length > 0) {
       saveSession(history)
     }
   }, [isDetecting, history])
 
-  // ── Save on unmount (ref avoids stale closure over empty initial history) ──
+  // Also save on unmount (ref avoids stale closure)
   const historyRef = useRef(history)
   historyRef.current = history
   useEffect(() => {
@@ -77,8 +63,6 @@ export function Detect() {
       saveSession(historyRef.current)
     }
   }, [])
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
 
   const handleStart = useCallback(async (): Promise<void> => {
     await startCamera()
@@ -100,7 +84,6 @@ export function Detect() {
 
   const activeError = cameraError ?? detectionError
 
-  // Dominant emotion from latest result
   const dominantEmotion =
     latestResult?.face_detected && latestResult.dominant ? latestResult.dominant : null
   const confidence = latestResult?.face_detected ? (latestResult.confidence ?? 0) : 0
@@ -109,7 +92,6 @@ export function Detect() {
     <div className="min-h-screen bg-background text-white font-sans">
       <main className="px-4 md:px-6 py-5 space-y-4 max-w-screen-2xl mx-auto">
 
-        {/* ── Dominant emotion strip ─────────────────────────────────────── */}
         <div className="bg-surface border border-border rounded-xl">
           <DominantEmotionDisplay
             emotion={dominantEmotion}
@@ -118,7 +100,6 @@ export function Detect() {
           />
         </div>
 
-        {/* ── Controls bar ──────────────────────────────────────────────── */}
         <Controls
           isDetecting={isDetecting}
           isStreamActive={isStreamActive}
@@ -132,7 +113,6 @@ export function Detect() {
           onReset={handleReset}
         />
 
-        {/* ── Primary grid: camera feed + emotion bar chart ──────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-stretch">
           <div className="lg:col-span-3 h-full">
             <ErrorBoundary>
@@ -150,7 +130,6 @@ export function Detect() {
           </div>
         </div>
 
-        {/* ── Secondary grid: timeline + session summary ─────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-stretch">
           <div className="lg:col-span-3 bg-surface border border-border rounded-xl p-4 hover:shadow-glow transition-shadow duration-300 min-h-[260px]">
             <EmotionTimeline history={history} />

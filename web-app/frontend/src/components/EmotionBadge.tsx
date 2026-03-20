@@ -1,7 +1,3 @@
-/**
- * EmotionBadge — pill badge displaying an emotion with its emoji, label, and optional confidence.
- */
-
 import { EMOTION_COLORS, EMOTION_EMOJIS, EMOTION_LABELS } from '../constants'
 import type { EmotionKey } from '../types'
 

@@ -1,7 +1,3 @@
-/**
- * Navbar — sticky top navigation bar with route highlighting and backend status.
- */
-
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -72,7 +68,6 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <nav className="max-w-screen-2xl mx-auto px-6 py-3 flex items-center justify-between">
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-lg bg-accent/20 border border-accent/40 flex items-center justify-center text-accent text-sm font-bold group-hover:bg-accent/30 transition-colors">
             E
@@ -80,7 +75,6 @@ export function Navbar() {
           <span className="text-white font-bold tracking-tight">EmoVision</span>
         </Link>
 
-        {/* Nav links */}
         <div className="flex items-center gap-0.5">
           {NAV_LINKS.map((link) => {
             const isActive = location.pathname === link.path
@@ -105,7 +99,6 @@ export function Navbar() {
           })}
         </div>
 
-        {/* Status badge + GitHub */}
         <div className="flex items-center gap-3">
           <div
             className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono border ${cfg.bg} ${cfg.color}`}

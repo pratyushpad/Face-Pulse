@@ -1,11 +1,3 @@
-/**
- * EmotionTimeline — line chart showing dominant emotion confidence over time.
- *
- * Scrolls as new data points arrive (up to MAX_HISTORY_POINTS).
- * X-axis shows relative time ("Ns ago"), Y-axis shows confidence 0–100%.
- * Line color tracks the most recent dominant emotion.
- */
-
 import { useMemo } from 'react'
 import { Line } from 'react-chartjs-2'
 import type { ChartOptions, ChartData } from 'chart.js'
@@ -19,21 +11,11 @@ import {
 } from '../constants'
 
 interface EmotionTimelineProps {
-  /** Rolling detection history from useEmotionDetection. */
   history: EmotionDataPoint[]
 }
 
-/** Maximum number of x-axis labels to show (avoids clutter). */
 const MAX_VISIBLE_LABELS = 6
 
-/**
- * Format a relative time label for the x-axis.
- * Keeps labels short: "now", "15s", "2m", "3m 20s".
- *
- * @param timestamp - Unix timestamp (ms) of the data point.
- * @param now - Current time in ms.
- * @returns Short human-readable label.
- */
 function formatRelativeTime(timestamp: number, now: number): string {
   const seconds = Math.round((now - timestamp) / 1000)
   if (seconds <= 0) return 'now'
@@ -43,14 +25,7 @@ function formatRelativeTime(timestamp: number, now: number): string {
   return s === 0 ? `${m}m` : `${m}m ${s}s`
 }
 
-/**
- * Line chart component for temporal emotion confidence tracking.
- *
- * Renders confidence scores over time for whichever emotion is currently dominant,
- * using that emotion's color for the line.
- */
 export function EmotionTimeline({ history }: EmotionTimelineProps) {
-  /** Determine the line color from the most recent dominant emotion. */
   const lineColor = useMemo(() => {
     if (history.length === 0) return '#3b82f6'
     const last = history[history.length - 1]
@@ -58,7 +33,6 @@ export function EmotionTimeline({ history }: EmotionTimelineProps) {
   }, [history])
 
   const chartData: ChartData<'line'> = useMemo(() => {
-    // Recompute `now` inside memo so labels are always relative to current time
     const now = Date.now()
     const step = Math.max(1, Math.floor(history.length / MAX_VISIBLE_LABELS))
 
@@ -120,7 +94,6 @@ export function EmotionTimeline({ history }: EmotionTimelineProps) {
         },
         y: {
           min: 0,
-          // Auto-scale max to actual data, not hardcoded 100%
           grid: { color: CHART_GRID_COLOR },
           ticks: {
             color: CHART_TEXT_COLOR,
@@ -135,7 +108,6 @@ export function EmotionTimeline({ history }: EmotionTimelineProps) {
     []
   )
 
-  /** Most recent dominant emotion for the header badge. */
   const currentEmotion =
     history.length > 0 ? history[history.length - 1].dominant : null
 

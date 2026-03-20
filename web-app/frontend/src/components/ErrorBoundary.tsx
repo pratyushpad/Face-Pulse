@@ -1,16 +1,7 @@
-/**
- * ErrorBoundary — catches runtime errors in the React component tree.
- *
- * Wraps the camera section so a webcam or canvas crash doesn't bring down
- * the whole page. Displays a styled fallback UI instead.
- */
-
 import { Component, type ReactNode, type ErrorInfo } from 'react'
 
 interface Props {
-  /** Content to render inside the boundary. */
   children: ReactNode
-  /** Optional custom fallback. Defaults to the built-in error card. */
   fallback?: ReactNode
 }
 
@@ -19,10 +10,6 @@ interface State {
   errorMessage: string
 }
 
-/**
- * Class-based error boundary (React requires class components for this API).
- * Catches any render or lifecycle errors in its subtree.
- */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
@@ -37,7 +24,6 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('ErrorBoundary caught an error:', error, info)
   }
 
-  /** Reset the error state so the user can retry. */
   handleReset = (): void => {
     this.setState({ hasError: false, errorMessage: '' })
   }

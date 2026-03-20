@@ -1,8 +1,3 @@
-/**
- * FadeUpSection — animates children up into view when scrolled into viewport.
- * Uses framer-motion useInView for intersection detection.
- */
-
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 

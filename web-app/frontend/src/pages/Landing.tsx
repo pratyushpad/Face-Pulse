@@ -94,7 +94,7 @@ export function Landing() {
             >
               Emotion
             </span>{' '}
-            Intelligence
+            Detection
           </motion.h1>
 
           <motion.p
@@ -103,8 +103,8 @@ export function Landing() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg text-white/55 max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            A deep learning system that classifies facial expressions in real time using a fine-tuned
-            VGG16 network trained on 35,000+ annotated face images.
+            I trained 4 neural networks on FER2013 (35K face images) and deployed the best one —
+            a fine-tuned VGG16 — as a real-time webcam app.
           </motion.p>
 
           <motion.div
@@ -256,11 +256,11 @@ export function Landing() {
         <section className="max-w-screen-2xl mx-auto px-6 py-24 text-center">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-4xl font-black tracking-tight mb-4">
-              Ready to analyze your emotions?
+              Try it yourself
             </h2>
             <p className="text-white/50 mb-10 leading-relaxed">
-              Turn on your webcam and see deep learning classify your facial expressions in
-              real time. No data leaves your browser.
+              Open your webcam, and the model runs inference on every frame.
+              All processing happens server-side — nothing is stored.
             </p>
             <Link
               to="/detect"

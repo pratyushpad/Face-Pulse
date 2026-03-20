@@ -109,13 +109,12 @@ Open `http://localhost:5175` in your browser.
 - Data augmentation (rotation, shifts, flips, zoom) to combat FER2013 label noise
 
 ## What I Learned
-- How to build and train MLPs, CNNs, and transfer learning models in Keras
-- Two-phase fine-tuning strategy: freeze base → train head → unfreeze last blocks → fine-tune with low LR
-- Why convolutional networks outperform flat MLPs on image data
-- The power of transfer learning — reusing pretrained weights dramatically improves accuracy
-- How dropout and batch normalization help prevent overfitting
-- Full-stack deployment: React + FastAPI + Docker on Hugging Face Spaces + Netlify
-- Real-time browser-based ML inference with webcam capture and canvas overlays
+- Flattening images into vectors loses all spatial information — that's why my MLP on raw pixels performed the worst
+- Two-phase fine-tuning made a huge difference: freezing VGG16 first, then unfreezing the last 2 blocks with a 10x lower LR to avoid blowing away the pretrained weights
+- FER2013 labels are noisy (some images are mislabeled) — data augmentation helped the model generalize instead of memorizing bad labels
+- Getting training normalization to match inference normalization was a pain — I had to export the StandardScaler params to JSON and load them in the backend
+- Deploying TensorFlow models on Hugging Face Spaces required a Docker setup since the model file is too large for the default environment
+- Canvas overlay rendering at 60fps while simultaneously capturing frames for inference every 500ms — had to be careful with requestAnimationFrame vs setInterval
 
 ## Author
 Pratyush Padhy — UCI CS '28

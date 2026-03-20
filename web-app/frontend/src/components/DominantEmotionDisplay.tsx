@@ -1,8 +1,3 @@
-/**
- * DominantEmotionDisplay — shows the current dominant emotion with animated emoji,
- * color-coded label, and animated confidence bar.
- */
-
 import { motion, AnimatePresence } from 'framer-motion'
 import { EMOTION_COLORS, EMOTION_EMOJIS, EMOTION_LABELS } from '../constants'
 import type { EmotionKey } from '../types'
@@ -29,7 +24,6 @@ export function DominantEmotionDisplay({
 
   return (
     <div className="flex items-center gap-5 px-5 py-4">
-      {/* Animated emoji */}
       <AnimatePresence mode="wait">
         <motion.span
           key={emotion ?? 'idle'}
@@ -43,7 +37,6 @@ export function DominantEmotionDisplay({
         </motion.span>
       </AnimatePresence>
 
-      {/* Label + bar */}
       <div className="flex-1 min-w-0">
         <AnimatePresence mode="wait">
           <motion.p
@@ -81,7 +74,6 @@ export function DominantEmotionDisplay({
         )}
       </div>
 
-      {/* Live indicator */}
       {isDetecting && (
         <div className="flex items-center gap-1.5 text-xs font-mono text-white/40 flex-shrink-0">
           <motion.span

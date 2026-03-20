@@ -1,13 +1,8 @@
-/**
- * GlowCard — a surface card that glows on hover using framer-motion.
- */
-
 import { motion } from 'framer-motion'
 
 interface GlowCardProps {
   children: React.ReactNode
   className?: string
-  /** Hex color string for the glow (e.g. '#22c55e'). Defaults to accent blue. */
   glowColor?: string
   onClick?: () => void
 }

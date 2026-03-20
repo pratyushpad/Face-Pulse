@@ -1,22 +1,6 @@
-/**
- * useCamera — manages webcam access, device enumeration, and stream lifecycle.
- *
- * Usage:
- *   const { videoRef, isStreamActive, cameras, startCamera, stopCamera, ... } = useCamera()
- *   <video ref={videoRef} autoPlay muted playsInline />
- */
-
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { CameraState } from '../types'
 
-/**
- * Custom hook for managing the browser webcam stream.
- *
- * Handles getUserMedia, device enumeration, camera switching,
- * and stream cleanup on unmount.
- *
- * @returns CameraState — videoRef and all camera control functions.
- */
 export function useCamera(): CameraState & {
   videoRef: React.RefObject<HTMLVideoElement>
 } {
@@ -28,14 +12,12 @@ export function useCamera(): CameraState & {
   const [selectedCameraId, setSelectedCameraId] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
 
-  // Ref mirrors selectedCameraId so listCameras can read the current value
-  // without adding it to its dependency array (breaks the circular dep chain).
+  // Ref to avoid stale closure in listCameras
   const selectedCameraIdRef = useRef<string>('')
   useEffect(() => {
     selectedCameraIdRef.current = selectedCameraId
   }, [selectedCameraId])
 
-  /** Enumerate available video input devices and update the cameras list. */
   const listCameras = useCallback(async (): Promise<void> => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices()
@@ -49,7 +31,6 @@ export function useCamera(): CameraState & {
     }
   }, [])
 
-  /** Stop the current stream and release the camera. */
   const stopCamera = useCallback((): void => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop())
@@ -61,14 +42,9 @@ export function useCamera(): CameraState & {
     setIsStreamActive(false)
   }, [])
 
-  /**
-   * Request camera access and attach the stream to the video element.
-   * Lists available cameras after stream starts (permissions now granted).
-   */
   const startCamera = useCallback(async (): Promise<void> => {
     setError(null)
     try {
-      // Stop any existing stream first
       stopCamera()
 
       const constraints: MediaStreamConstraints = {
@@ -87,8 +63,6 @@ export function useCamera(): CameraState & {
       }
 
       setIsStreamActive(true)
-
-      // Enumerate cameras now that permissions are granted (labels become available)
       await listCameras()
     } catch (err) {
       const message =
@@ -99,12 +73,6 @@ export function useCamera(): CameraState & {
     }
   }, [selectedCameraId, stopCamera, listCameras])
 
-  /**
-   * Switch to a different camera by device ID.
-   * Stops the current stream and restarts with the new device.
-   *
-   * @param deviceId - The deviceId from a MediaDeviceInfo object.
-   */
   const switchCamera = useCallback(
     (deviceId: string): void => {
       setSelectedCameraId(deviceId)
@@ -112,16 +80,13 @@ export function useCamera(): CameraState & {
     []
   )
 
-  // When selectedCameraId changes (user switched camera), restart the stream.
-  // startCamera is a safe dep here: it only changes when selectedCameraId changes,
-  // so both fire together and the effect runs exactly once per camera switch.
+  // Restart stream when camera changes
   useEffect(() => {
     if (isStreamActive && selectedCameraId) {
       startCamera()
     }
-  }, [selectedCameraId, startCamera]) // isStreamActive intentionally omitted — adding it would re-run on stream start/stop
+  }, [selectedCameraId, startCamera]) // isStreamActive intentionally omitted
 
-  // Cleanup stream on unmount
   useEffect(() => {
     return () => {
       stopCamera()

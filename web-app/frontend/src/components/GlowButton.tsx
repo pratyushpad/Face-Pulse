@@ -1,7 +1,3 @@
-/**
- * GlowButton — animated button with multiple variants.
- */
-
 import { motion } from 'framer-motion'
 
 type Variant = 'primary' | 'ghost' | 'danger' | 'success' | 'accent-outline'
