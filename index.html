@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmoVision — Real-time Emotion Detection</title>
+  <meta name="description" content="Real-time facial emotion analysis powered by machine learning. All processing runs locally in your browser.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-base: #0a0a0a;
+      --bg-surface: #111111;
+      --bg-elevated: #1a1a1a;
+      --border-subtle: rgba(255,255,255,0.07);
+      --border-default: rgba(255,255,255,0.12);
+      --text-primary: #f5f5f5;
+      --text-secondary: #a3a3a3;
+      --text-muted: #525252;
+      --accent: #60a5fa;
+      --accent-hover: #3b82f6;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --nav-height: 56px;
+      --max-width: 1280px;
+      --radius: 6px;
+    }
+
+    html.light {
+      --bg-base: #fafafa;
+      --bg-surface: #ffffff;
+      --bg-elevated: #f0f0f0;
+      --border-subtle: rgba(0,0,0,0.06);
+      --border-default: rgba(0,0,0,0.1);
+      --text-primary: #171717;
+      --text-secondary: #525252;
+      --text-muted: #a3a3a3;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 3px; }
+
+    /* ── TYPOGRAPHY ── */
+    .label {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .mono { font-family: var(--font-mono); font-size: 13px; }
+    .hero-emotion {
+      font-size: 72px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      transition: opacity 200ms ease;
+    }
+    .section-heading { font-size: 24px; font-weight: 600; }
+
+    /* ── NAVIGATION ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--nav-height);
+      background: var(--bg-base);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      z-index: 100;
+    }
+    .nav-inner {
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .nav-logo svg { width: 20px; height: 20px; stroke: var(--accent); }
+    .nav-links { display: flex; gap: 4px; align-items: center; }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: color 150ms ease, background 150ms ease;
+      border: none;
+      background: none;
+    }
+    .nav-link:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+    .nav-link.active { color: var(--accent); }
+    .nav-link svg { width: 16px; height: 16px; }
+    .nav-mobile-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      cursor: pointer;
+      padding: 4px;
+    }
+    .nav-mobile-btn svg { width: 20px; height: 20px; }
+
+    /* ── LOADING SCREEN ── */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-base);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      transition: opacity 300ms ease;
+    }
+    #loading-screen.hidden { opacity: 0; pointer-events: none; }
+    .loading-title { font-size: 20px; font-weight: 600; margin-bottom: 24px; }
+    .loading-status {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+    .loading-bar-track {
+      width: 280px;
+      height: 2px;
+      background: var(--bg-elevated);
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    .loading-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 400ms ease-out;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: calc(var(--nav-height) + 48px) 24px 48px;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+    }
+
+    /* ── HERO / DETECTION ── */
+    .hero-header {
+      margin-bottom: 32px;
+    }
+    .hero-tagline {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      max-width: 480px;
+    }
+    .camera-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .camera-container video,
+    .camera-container canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+    .camera-container canvas { pointer-events: none; }
+    .camera-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+    .camera-placeholder svg { width: 48px; height: 48px; opacity: 0.3; }
+    .camera-placeholder p { font-size: 13px; }
+    .camera-error {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--danger);
+      display: none;
+    }
+    .camera-error svg { width: 32px; height: 32px; }
+    .camera-error p { font-size: 13px; color: var(--text-secondary); text-align: center; max-width: 260px; }
+
+    .hud-overlay {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      text-align: right;
+      pointer-events: none;
+      z-index: 5;
+      line-height: 1.5;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+    .status-dot.active { background: var(--success); }
+    .status-dot.error { background: var(--danger); }
+
+    .camera-controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+      border: 1px solid var(--border-default);
+      background: transparent;
+      color: var(--text-primary);
+    }
+    .btn svg { width: 14px; height: 14px; }
+    .btn:hover { background: rgba(255,255,255,0.05); }
+    .btn:active { background: rgba(255,255,255,0.08); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+    }
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .btn-sm { padding: 6px 10px; font-size: 12px; }
+    .btn-sm svg { width: 12px; height: 12px; }
+
+    /* ── EMOTION DISPLAY ── */
+    .emotion-display {
+      margin-top: 32px;
+    }
+    .emotion-current {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .emotion-confidence-bar {
+      flex: 1;
+      max-width: 200px;
+      height: 4px;
+      background: var(--bg-elevated);
+      border-radius: 2px;
+      overflow: hidden;
+      align-self: center;
+    }
+    .emotion-confidence-fill {
+      height: 100%;
+      background: var(--text-secondary);
+      transition: width 300ms ease-out;
+    }
+    .emotion-pct {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--text-secondary);
+      align-self: center;
+    }
+
+    .emotion-bars {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .emotion-bar-row {
+      display: grid;
+      grid-template-columns: 80px 1fr 40px;
+      align-items: center;
+      gap: 12px;
+    }
+    .emotion-bar-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: capitalize;
+    }
+    .emotion-bar-track {
+      height: 6px;
+      background: var(--bg-elevated);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .emotion-bar-fill {
+      height: 100%;
+      background: var(--text-muted);
+      border-radius: 3px;
+      transition: width 300ms ease-out;
+      min-width: 0;
+    }
+    .emotion-bar-fill.dominant { background: var(--accent); }
+    .emotion-bar-value {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* ── ANALYTICS SIDEBAR ── */
+    .analytics-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    .stat-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .stat-value.accent { color: var(--accent); }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 200px;
+    }
+    .chart-container canvas { width: 100% !important; height: 100% !important; }
+
+    .expressions-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .expressions-table th {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .expressions-table th:last-child,
+    .expressions-table td:last-child { text-align: right; }
+    .expressions-table td {
+      padding: 8px 0;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-subtle);
+      text-transform: capitalize;
+    }
+    .expressions-table td:last-child {
+      font-family: var(--font-mono);
+      color: var(--text-secondary);
+    }
+    .mini-bar {
+      display: inline-block;
+      height: 3px;
+      background: var(--text-muted);
+      border-radius: 1px;
+      vertical-align: middle;
+      margin-left: 8px;
+      transition: width 300ms ease-out;
+    }
+    .mini-bar.dominant { background: var(--accent); }
+
+    /* ── HISTORY SECTION ── */
+    .section { margin-top: 48px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .history-table-wrap {
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .history-table thead { background: var(--bg-surface); }
+    .history-table th {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      text-align: left;
+      padding: 10px 16px;
+    }
+    .history-table td {
+      padding: 10px 16px;
+      font-size: 13px;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .history-table td:first-child { font-family: var(--font-mono); color: var(--text-secondary); }
+    .history-table td:nth-child(2) { text-transform: capitalize; }
+    .history-table td:nth-child(3) { font-family: var(--font-mono); }
+    .history-table td:nth-child(4) { font-family: var(--font-mono); color: var(--text-muted); }
+    .history-table tbody tr:hover { background: var(--bg-surface); }
+    .history-empty {
+      padding: 48px 16px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .history-scroll { max-height: 320px; overflow-y: auto; }
+
+    /* ── SETTINGS PANEL ── */
+    .settings-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 150;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms ease;
+    }
+    .settings-overlay.open { opacity: 1; pointer-events: all; }
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 360px;
+      max-width: 100vw;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border-subtle);
+      z-index: 151;
+      transform: translateX(100%);
+      transition: transform 250ms ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .settings-panel.open { transform: translateX(0); }
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .settings-header h2 { font-size: 16px; font-weight: 600; }
+    .settings-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 150ms ease, background 150ms ease;
+    }
+    .settings-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+    .settings-close svg { width: 18px; height: 18px; }
+    .settings-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .setting-group { display: flex; flex-direction: column; gap: 10px; }
+    .setting-group .label { margin-bottom: 2px; }
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .setting-label {
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+    .setting-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .toggle input { display: none; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: 11px;
+      transition: background 150ms ease, border-color 150ms ease;
+    }
+    .toggle input:checked + .toggle-track {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      background: var(--text-primary);
+      border-radius: 50%;
+      transition: transform 150ms ease;
+      pointer-events: none;
+    }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(18px); }
+
+    /* Range slider */
+    .range-slider { width: 100%; }
+    .range-slider input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: var(--bg-elevated);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .range-slider input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+    }
+    .range-labels span {
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .range-labels span.active { color: var(--accent); }
+
+    /* Select */
+    .custom-select {
+      position: relative;
+    }
+    .custom-select select {
+      width: 100%;
+      padding: 8px 12px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-primary);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius);
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      outline: none;
+      transition: border-color 150ms ease;
+    }
+    .custom-select select:hover { border-color: var(--text-muted); }
+    .custom-select select:focus { border-color: var(--accent); }
+    .custom-select::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid var(--text-muted);
+      pointer-events: none;
+    }
+    .custom-select option { background: var(--bg-elevated); color: var(--text-primary); }
+
+    /* ── FOOTER ── */
+    footer {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .footer-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .footer-info span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .footer-privacy {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .footer-privacy svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .footer-link {
+      color: var(--text-muted);
+      transition: color 150ms ease;
+      cursor: pointer;
+    }
+    .footer-link:hover { color: var(--text-primary); }
+    .footer-link svg { width: 20px; height: 20px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .two-col { grid-template-columns: 1fr; }
+      .hero-emotion { font-size: 48px; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: var(--nav-height);
+        left: 0;
+        right: 0;
+        background: var(--bg-base);
+        border-bottom: 1px solid var(--border-subtle);
+        padding: 8px;
+      }
+      .nav-mobile-btn { display: block; }
+      main { padding-left: 16px; padding-right: 16px; }
+      .hero-emotion { font-size: 36px; }
+      .camera-controls { flex-wrap: wrap; }
+      .settings-panel { width: 100vw; }
+      footer { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 375px) {
+      .hero-emotion { font-size: 28px; }
+      .emotion-bar-row { grid-template-columns: 64px 1fr 36px; gap: 8px; }
+    }
+
+    /* ── REDUCED MOTION ── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* ── UTILITIES ── */
+    .hidden { display: none !important; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- ── NAVIGATION ── -->
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        EmoVision
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="#detect" class="nav-link active" data-section="detect">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Detect
+        </a>
+        <a href="#analytics" class="nav-link" data-section="analytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Analytics
+        </a>
+        <a href="#history" class="nav-link" data-section="history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          History
+        </a>
+        <button class="nav-link" id="settings-btn" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </button>
+      </div>
+      <button class="nav-mobile-btn" id="mobile-menu-btn" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── LOADING SCREEN ── -->
+  <div id="loading-screen">
+    <div class="nav-logo" style="margin-bottom:48px;font-size:20px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;stroke:var(--accent)"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      EmoVision
+    </div>
+    <p class="loading-status" id="loading-status">Initializing...</p>
+    <div class="loading-bar-track">
+      <div class="loading-bar-fill" id="loading-bar"></div>
+    </div>
+  </div>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main>
+    <!-- DETECT SECTION -->
+    <section id="detect">
+      <div class="hero-header">
+        <h1 class="section-heading">EmoVision</h1>
+        <p class="hero-tagline">Real-time facial emotion analysis powered by machine learning. All processing runs locally in your browser.</p>
+      </div>
+
+      <div class="two-col">
+        <!-- Left Column: Camera + Controls -->
+        <div>
+          <div class="camera-container" id="camera-container">
+            <video id="video" autoplay muted playsinline></video>
+            <canvas id="overlay"></canvas>
+            <div class="camera-placeholder" id="camera-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <p>Camera feed will appear here</p>
+            </div>
+            <div class="camera-error" id="camera-error">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              <p id="camera-error-msg">Camera access denied. Please allow camera permissions and reload.</p>
+            </div>
+            <div class="hud-overlay" id="hud-overlay" style="display:none;">
+              <div id="hud-fps">0 FPS</div>
+              <div id="hud-latency">0ms</div>
+            </div>
+          </div>
+
+          <div class="status-bar">
+            <span class="status-dot" id="status-dot"></span>
+            <span id="status-text">Ready</span>
+          </div>
+
+          <div class="camera-controls">
+            <button class="btn btn-primary" id="btn-start">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Start Detection
+            </button>
+            <button class="btn" id="btn-stop" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12"/></svg>
+              Stop
+            </button>
+            <button class="btn" id="btn-switch" disabled aria-label="Switch camera">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Switch
+            </button>
+          </div>
+
+          <!-- Emotion Display -->
+          <div class="emotion-display" id="emotion-display">
+            <span class="label">Detected Emotion</span>
+            <div class="emotion-current">
+              <span class="hero-emotion" id="emotion-label">—</span>
+              <span class="emotion-pct" id="emotion-pct"></span>
+            </div>
+            <div class="emotion-confidence-bar" id="main-confidence-bar" style="display:none;">
+              <div class="emotion-confidence-fill" id="main-confidence-fill"></div>
+            </div>
+
+            <div class="emotion-bars" id="emotion-bars">
+              <!-- Generated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Analytics -->
+        <div class="analytics-panel" id="analytics">
+          <div>
+            <span class="label">Session</span>
+            <div style="display:flex;gap:32px;margin-top:8px;">
+              <div class="stat-group">
+                <span class="label">Duration</span>
+                <span class="stat-value mono" id="session-duration">00:00</span>
+              </div>
+              <div class="stat-group">
+                <span class="label">Detections</span>
+                <span class="stat-value mono" id="session-detections">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <span class="label">Dominant Emotion</span>
+            <div class="stat-value accent" id="dominant-emotion" style="margin-top:8px;text-transform:capitalize;">—</div>
+          </div>
+
+          <div>
+            <span class="label">Emotion Timeline</span>
+            <div class="chart-container" style="margin-top:12px;">
+              <canvas id="timeline-chart"></canvas>
+            </div>
+          </div>
+
+          <div>
+            <span class="label">Session Distribution</span>
+            <div class="chart-container" style="margin-top:12px;height:180px;">
+              <canvas id="donut-chart"></canvas>
+            </div>
+          </div>
+
+          <div>
+            <span class="label">Expressions Detected</span>
+            <table class="expressions-table" style="margin-top:8px;">
+              <thead>
+                <tr><th>Emotion</th><th>Count</th></tr>
+              </thead>
+              <tbody id="expressions-tbody">
+                <!-- Generated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY SECTION -->
+    <section class="section" id="history">
+      <div class="section-header">
+        <h2 class="section-heading">History</h2>
+        <button class="btn btn-sm" id="btn-export" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+      </div>
+      <div class="history-table-wrap">
+        <div class="history-scroll" id="history-scroll">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Emotion</th>
+                <th>Confidence</th>
+                <th>Duration</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+            </tbody>
+          </table>
+          <div class="history-empty" id="history-empty">
+            No emotion events recorded yet. Start detection to begin logging.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── SETTINGS PANEL ── -->
+  <div class="settings-overlay" id="settings-overlay"></div>
+  <div class="settings-panel" id="settings-panel">
+    <div class="settings-header">
+      <h2>Settings</h2>
+      <button class="settings-close" id="settings-close" aria-label="Close settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="settings-body">
+      <!-- Sensitivity -->
+      <div class="setting-group">
+        <span class="label">Detection Sensitivity</span>
+        <div class="range-slider">
+          <input type="range" id="setting-sensitivity" min="0" max="2" value="1" step="1">
+          <div class="range-labels">
+            <span data-val="0">Low</span>
+            <span data-val="1" class="active">Medium</span>
+            <span data-val="2">High</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model -->
+      <div class="setting-group">
+        <span class="label">Detection Model</span>
+        <div class="custom-select">
+          <select id="setting-model">
+            <option value="fast" selected>Fast (Lightweight)</option>
+            <option value="accurate">Accurate (Full Model)</option>
+          </select>
+        </div>
+        <p class="setting-desc">Fast uses a smaller input size for better performance. Accurate uses a larger input for better detection.</p>
+      </div>
+
+      <!-- Toggles -->
+      <div class="setting-group">
+        <span class="label">Display</span>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Face bounding box</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="setting-bbox" checked>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">HUD overlay (FPS / latency)</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="setting-hud" checked>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Dark mode</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="setting-darkmode" checked>
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Camera -->
+      <div class="setting-group">
+        <span class="label">Camera Device</span>
+        <div class="custom-select">
+          <select id="setting-camera">
+            <option value="">Default</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="footer-info">
+      <span>Powered by face-api.js &middot; TensorFlow.js</span>
+      <span>&copy; 2024 EmoVision</span>
+    </div>
+    <div class="footer-privacy">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      All processing is local — no data leaves your device
+    </div>
+    <a href="https://github.com/Pratyush-Padhy/emotion-detection-cnn" target="_blank" rel="noopener" class="footer-link" aria-label="GitHub repository">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+    </a>
+  </footer>
+
+  <!-- ── APPLICATION SCRIPT ── -->
+  <script>
+  (function() {
+    'use strict';
+
+    // ── CONSTANTS ──
+    const EMOTIONS = ['neutral', 'happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised'];
+    const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+    const DETECTION_INTERVAL = 150;
+    const CHART_UPDATE_INTERVAL = 1000;
+    const SENSITIVITY_MAP = [0.3, 0.5, 0.7];
+    const INPUT_SIZE_MAP = { fast: 224, accurate: 416 };
+
+    // ── STATE ──
+    const state = {
+      isDetecting: false,
+      modelsLoaded: false,
+      currentEmotion: null,
+      currentConfidence: 0,
+      sessionStart: null,
+      stream: null,
+      cameras: [],
+      currentCameraIdx: 0,
+      // Tracking
+      emotionCounts: {},
+      timelineData: [],
+      historyLog: [],
+      lastEmotionChange: null,
+      lastEmotion: null,
+      totalDetections: 0,
+      // Performance
+      fps: 0,
+      latency: 0,
+      frameCount: 0,
+      lastFpsTime: 0,
+      // Settings
+      sensitivity: 1,
+      modelType: 'fast',
+      showBbox: true,
+      showHud: true,
+      darkMode: true,
+    };
+
+    // ── DOM REFS ──
+    const $ = (sel) => document.querySelector(sel);
+    const video = $('#video');
+    const overlayCanvas = $('#overlay');
+    const ctx = overlayCanvas.getContext('2d');
+    const loadingScreen = $('#loading-screen');
+    const loadingStatus = $('#loading-status');
+    const loadingBar = $('#loading-bar');
+    const statusDot = $('#status-dot');
+    const statusText = $('#status-text');
+    const emotionLabel = $('#emotion-label');
+    const emotionPct = $('#emotion-pct');
+    const mainConfBar = $('#main-confidence-bar');
+    const mainConfFill = $('#main-confidence-fill');
+    const hudOverlay = $('#hud-overlay');
+    const hudFps = $('#hud-fps');
+    const hudLatency = $('#hud-latency');
+    const btnStart = $('#btn-start');
+    const btnStop = $('#btn-stop');
+    const btnSwitch = $('#btn-switch');
+    const btnExport = $('#btn-export');
+    const historyTbody = $('#history-tbody');
+    const historyEmpty = $('#history-empty');
+    const sessionDuration = $('#session-duration');
+    const sessionDetections = $('#session-detections');
+    const dominantEmotion = $('#dominant-emotion');
+    const emotionBarsContainer = $('#emotion-bars');
+    const expressionsTbody = $('#expressions-tbody');
+    const cameraPlaceholder = $('#camera-placeholder');
+    const cameraError = $('#camera-error');
+    const cameraErrorMsg = $('#camera-error-msg');
+    const settingsPanel = $('#settings-panel');
+    const settingsOverlay = $('#settings-overlay');
+
+    // ── CHARTS ──
+    let timelineChart = null;
+    let donutChart = null;
+
+    // ── INIT ──
+    async function init() {
+      buildEmotionBars();
+      buildExpressionsTable();
+      initCharts();
+      bindEvents();
+      await loadModels();
+    }
+
+    // ── MODEL LOADING ──
+    async function loadModels() {
+      const models = [
+        { net: faceapi.nets.tinyFaceDetector, name: 'Face Detector', pct: 33 },
+        { net: faceapi.nets.faceExpressionNet, name: 'Expression Recognition', pct: 66 },
+        { net: faceapi.nets.faceLandmark68Net, name: 'Face Landmarks', pct: 100 },
+      ];
+
+      for (const m of models) {
+        loadingStatus.textContent = `Loading ${m.name}...`;
+        loadingBar.style.width = `${m.pct - 20}%`;
+        try {
+          await m.net.loadFromUri(MODEL_URL);
+          loadingBar.style.width = `${m.pct}%`;
+        } catch (err) {
+          loadingStatus.textContent = `Failed to load ${m.name}. Please refresh.`;
+          loadingBar.style.background = 'var(--danger)';
+          console.error('Model load error:', err);
+          return;
+        }
+      }
+
+      loadingStatus.textContent = 'Models loaded';
+      loadingBar.style.width = '100%';
+      state.modelsLoaded = true;
+
+      setTimeout(() => {
+        loadingScreen.classList.add('hidden');
+        setTimeout(() => { loadingScreen.style.display = 'none'; }, 300);
+      }, 400);
+
+      enumerateCameras();
+    }
+
+    // ── CAMERA ──
+    async function enumerateCameras() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        state.cameras = devices.filter(d => d.kind === 'videoinput');
+        const sel = $('#setting-camera');
+        sel.innerHTML = '';
+        state.cameras.forEach((cam, i) => {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = cam.label || `Camera ${i + 1}`;
+          sel.appendChild(opt);
+        });
+        if (state.cameras.length > 1) btnSwitch.disabled = false;
+      } catch (e) { /* permissions not yet granted */ }
+    }
+
+    async function startCamera(deviceId) {
+      stopCamera();
+      const constraints = {
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user',
+        },
+        audio: false,
+      };
+      if (deviceId) constraints.video.deviceId = { exact: deviceId };
+
+      try {
+        state.stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = state.stream;
+        await video.play();
+        cameraPlaceholder.style.display = 'none';
+        cameraError.style.display = 'none';
+
+        overlayCanvas.width = video.videoWidth;
+        overlayCanvas.height = video.videoHeight;
+
+        // Re-enumerate with labels now that permission is granted
+        enumerateCameras();
+
+        setStatus('active', 'Camera active');
+        return true;
+      } catch (err) {
+        cameraPlaceholder.style.display = 'none';
+        cameraError.style.display = 'flex';
+        if (err.name === 'NotAllowedError') {
+          cameraErrorMsg.textContent = 'Camera access denied. Please allow camera permissions in your browser settings and reload.';
+        } else if (err.name === 'NotFoundError') {
+          cameraErrorMsg.textContent = 'No camera found. Please connect a camera and reload.';
+        } else {
+          cameraErrorMsg.textContent = `Camera error: ${err.message}`;
+        }
+        setStatus('error', 'Camera error');
+        return false;
+      }
+    }
+
+    function stopCamera() {
+      if (state.stream) {
+        state.stream.getTracks().forEach(t => t.stop());
+        state.stream = null;
+      }
+      video.srcObject = null;
+    }
+
+    // ── DETECTION LOOP ──
+    let lastDetectionTime = 0;
+    let rafId = null;
+
+    function startDetection() {
+      state.isDetecting = true;
+      state.sessionStart = Date.now();
+      state.emotionCounts = {};
+      state.timelineData = [];
+      state.historyLog = [];
+      state.totalDetections = 0;
+      state.lastEmotion = null;
+      state.lastEmotionChange = Date.now();
+      state.lastFpsTime = performance.now();
+      state.frameCount = 0;
+      EMOTIONS.forEach(e => { state.emotionCounts[e] = 0; });
+
+      historyTbody.innerHTML = '';
+      historyEmpty.style.display = 'block';
+      updateCharts();
+
+      detectLoop();
+      sessionTimer();
+      chartUpdater();
+    }
+
+    function stopDetection() {
+      state.isDetecting = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      clearCanvas();
+    }
+
+    function detectLoop() {
+      rafId = requestAnimationFrame(async () => {
+        if (!state.isDetecting) return;
+
+        const now = performance.now();
+        if (now - lastDetectionTime >= DETECTION_INTERVAL) {
+          lastDetectionTime = now;
+          await runDetection();
+
+          // FPS
+          state.frameCount++;
+          if (now - state.lastFpsTime >= 1000) {
+            state.fps = state.frameCount;
+            state.frameCount = 0;
+            state.lastFpsTime = now;
+          }
+        }
+        detectLoop();
+      });
+    }
+
+    async function runDetection() {
+      if (!video.videoWidth) return;
+
+      const inputSize = INPUT_SIZE_MAP[state.modelType];
+      const scoreThreshold = SENSITIVITY_MAP[state.sensitivity];
+      const opts = new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold });
+
+      const t0 = performance.now();
+      const result = await faceapi.detectSingleFace(video, opts).withFaceExpressions();
+      state.latency = Math.round(performance.now() - t0);
+
+      clearCanvas();
+      updateHud();
+
+      if (!result) {
+        updateEmotionDisplay(null, 0, {});
+        setStatus('active', 'No face detected');
+        return;
+      }
+
+      state.totalDetections++;
+      sessionDetections.textContent = state.totalDetections;
+
+      const dims = faceapi.matchDimensions(overlayCanvas, video, true);
+      const resized = faceapi.resizeResults(result, dims);
+
+      // Draw bounding box
+      if (state.showBbox) {
+        const box = resized.detection.box;
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+        // Emotion label on bbox
+        if (state.currentEmotion) {
+          const labelText = `${state.currentEmotion} ${Math.round(state.currentConfidence * 100)}%`;
+          ctx.font = '12px "JetBrains Mono", monospace';
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          const tw = ctx.measureText(labelText).width;
+          ctx.fillRect(box.x, box.y - 18, tw + 8, 18);
+          ctx.fillStyle = '#f5f5f5';
+          ctx.fillText(labelText, box.x + 4, box.y - 5);
+        }
+      }
+
+      // Process expressions
+      const expressions = resized.expressions;
+      const sorted = Object.entries(expressions).sort((a, b) => b[1] - a[1]);
+      const topEmotion = sorted[0][0];
+      const topConfidence = sorted[0][1];
+
+      updateEmotionDisplay(topEmotion, topConfidence, expressions);
+      trackEmotion(topEmotion, topConfidence);
+      setStatus('active', 'Detecting');
+    }
+
+    function trackEmotion(emotion, confidence) {
+      state.emotionCounts[emotion] = (state.emotionCounts[emotion] || 0) + 1;
+
+      // Timeline data point
+      state.timelineData.push({
+        time: Date.now(),
+        emotion,
+        confidence,
+        values: { ...state.emotionCounts },
+      });
+
+      // History log (on emotion change)
+      if (emotion !== state.lastEmotion) {
+        const now = Date.now();
+        if (state.lastEmotion) {
+          const duration = now - state.lastEmotionChange;
+          addHistoryEntry(state.lastEmotion, state.currentConfidence, state.lastEmotionChange, duration);
+        }
+        state.lastEmotion = emotion;
+        state.lastEmotionChange = now;
+      }
+      state.currentConfidence = confidence;
+    }
+
+    // ── UI UPDATES ──
+    function updateEmotionDisplay(emotion, confidence, expressions) {
+      if (!emotion) {
+        if (state.currentEmotion !== null) {
+          emotionLabel.style.opacity = '0';
+          setTimeout(() => {
+            emotionLabel.textContent = '—';
+            emotionLabel.style.opacity = '1';
+            state.currentEmotion = null;
+          }, 200);
+        }
+        emotionPct.textContent = '';
+        mainConfBar.style.display = 'none';
+        return;
+      }
+
+      if (emotion !== state.currentEmotion) {
+        emotionLabel.style.opacity = '0';
+        setTimeout(() => {
+          emotionLabel.textContent = emotion;
+          emotionLabel.style.opacity = '1';
+        }, 200);
+      }
+      state.currentEmotion = emotion;
+      state.currentConfidence = confidence;
+
+      emotionPct.textContent = `${Math.round(confidence * 100)}%`;
+      mainConfBar.style.display = 'block';
+      mainConfFill.style.width = `${confidence * 100}%`;
+
+      // Update bars
+      EMOTIONS.forEach(e => {
+        const val = expressions[e] || 0;
+        const fill = document.getElementById(`bar-fill-${e}`);
+        const valEl = document.getElementById(`bar-val-${e}`);
+        if (fill) {
+          fill.style.width = `${val * 100}%`;
+          fill.className = 'emotion-bar-fill' + (e === emotion ? ' dominant' : '');
+        }
+        if (valEl) valEl.textContent = `${Math.round(val * 100)}%`;
+      });
+
+      // Update dominant
+      const maxE = Object.entries(state.emotionCounts).sort((a, b) => b[1] - a[1])[0];
+      if (maxE) dominantEmotion.textContent = maxE[0];
+
+      // Update expressions table
+      updateExpressionsTable();
+    }
+
+    function updateHud() {
+      if (state.showHud) {
+        hudOverlay.style.display = 'block';
+        hudFps.textContent = `${state.fps} FPS`;
+        hudLatency.textContent = `${state.latency}ms`;
+      } else {
+        hudOverlay.style.display = 'none';
+      }
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    }
+
+    function setStatus(type, text) {
+      statusDot.className = 'status-dot' + (type === 'active' ? ' active' : type === 'error' ? ' error' : '');
+      statusText.textContent = text;
+    }
+
+    function buildEmotionBars() {
+      emotionBarsContainer.innerHTML = EMOTIONS.map(e => `
+        <div class="emotion-bar-row">
+          <span class="emotion-bar-label">${e}</span>
+          <div class="emotion-bar-track">
+            <div class="emotion-bar-fill" id="bar-fill-${e}" style="width:0%"></div>
+          </div>
+          <span class="emotion-bar-value" id="bar-val-${e}">0%</span>
+        </div>
+      `).join('');
+    }
+
+    function buildExpressionsTable() {
+      expressionsTbody.innerHTML = EMOTIONS.map(e => `
+        <tr>
+          <td>${e}</td>
+          <td id="expr-count-${e}">0</td>
+        </tr>
+      `).join('');
+    }
+
+    function updateExpressionsTable() {
+      const maxCount = Math.max(...Object.values(state.emotionCounts), 1);
+      const dominant = Object.entries(state.emotionCounts).sort((a, b) => b[1] - a[1])[0];
+      EMOTIONS.forEach(e => {
+        const el = document.getElementById(`expr-count-${e}`);
+        const count = state.emotionCounts[e] || 0;
+        const barWidth = Math.round((count / maxCount) * 60);
+        const isDom = dominant && dominant[0] === e;
+        el.innerHTML = `${count} <span class="mini-bar${isDom ? ' dominant' : ''}" style="width:${barWidth}px"></span>`;
+      });
+    }
+
+    // ── HISTORY ──
+    function addHistoryEntry(emotion, confidence, startTime, duration) {
+      const entry = {
+        timestamp: new Date(startTime).toLocaleTimeString(),
+        emotion,
+        confidence: Math.round(confidence * 100),
+        duration: formatDuration(duration),
+        durationMs: duration,
+      };
+      state.historyLog.unshift(entry);
+
+      historyEmpty.style.display = 'none';
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${entry.timestamp}</td>
+        <td>${entry.emotion}</td>
+        <td>${entry.confidence}%</td>
+        <td>${entry.duration}</td>
+      `;
+      historyTbody.prepend(row);
+      btnExport.disabled = false;
+    }
+
+    function exportCSV() {
+      if (!state.historyLog.length) return;
+      const header = 'Timestamp,Emotion,Confidence,Duration\n';
+      const rows = state.historyLog.map(e =>
+        `${e.timestamp},${e.emotion},${e.confidence}%,${e.duration}`
+      ).join('\n');
+      const blob = new Blob([header + rows], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `emovision-log-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ── CHARTS ──
+    function initCharts() {
+      const gridColor = 'rgba(255,255,255,0.05)';
+      const tickColor = '#525252';
+
+      // Timeline
+      timelineChart = new Chart($('#timeline-chart'), {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: EMOTIONS.map((e, i) => ({
+            label: e,
+            data: [],
+            borderColor: e === 'neutral' ? 'rgba(255,255,255,0.3)' : `rgba(255,255,255,${0.15 + i * 0.03})`,
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0.3,
+            fill: false,
+          })),
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1a1a1a',
+              titleColor: '#f5f5f5',
+              bodyColor: '#a3a3a3',
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderWidth: 1,
+              titleFont: { family: 'Inter' },
+              bodyFont: { family: 'JetBrains Mono', size: 11 },
+              padding: 10,
+            },
+          },
+          scales: {
+            x: {
+              display: true,
+              grid: { color: gridColor },
+              ticks: { color: tickColor, font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 6 },
+            },
+            y: {
+              display: true,
+              min: 0,
+              max: 1,
+              grid: { color: gridColor },
+              ticks: {
+                color: tickColor,
+                font: { family: 'JetBrains Mono', size: 10 },
+                callback: v => `${Math.round(v * 100)}%`,
+                stepSize: 0.25,
+              },
+            },
+          },
+        },
+      });
+
+      // Donut
+      donutChart = new Chart($('#donut-chart'), {
+        type: 'doughnut',
+        data: {
+          labels: EMOTIONS,
+          datasets: [{
+            data: new Array(7).fill(0),
+            backgroundColor: EMOTIONS.map(() => 'rgba(255,255,255,0.08)'),
+            borderColor: 'rgba(255,255,255,0.03)',
+            borderWidth: 1,
+            hoverOffset: 4,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          animation: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                color: '#a3a3a3',
+                font: { family: 'Inter', size: 11 },
+                boxWidth: 10,
+                boxHeight: 10,
+                padding: 8,
+              },
+            },
+            tooltip: {
+              backgroundColor: '#1a1a1a',
+              titleColor: '#f5f5f5',
+              bodyColor: '#a3a3a3',
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderWidth: 1,
+              bodyFont: { family: 'JetBrains Mono', size: 11 },
+              padding: 10,
+              callbacks: {
+                label: (ctx) => ` ${ctx.label}: ${ctx.parsed}`,
+              },
+            },
+          },
+        },
+      });
+    }
+
+    function updateCharts() {
+      if (!timelineChart || !donutChart) return;
+
+      // Timeline
+      const recent = state.timelineData.slice(-60);
+      timelineChart.data.labels = recent.map(d => new Date(d.time).toLocaleTimeString([], { minute: '2-digit', second: '2-digit' }));
+
+      const dominant = Object.entries(state.emotionCounts).sort((a, b) => b[1] - a[1])[0];
+      const domEmotion = dominant ? dominant[0] : null;
+
+      EMOTIONS.forEach((e, i) => {
+        const ds = timelineChart.data.datasets[i];
+        ds.data = recent.map(d => {
+          const emotionVal = d.emotion === e ? d.confidence : 0;
+          return emotionVal;
+        });
+        if (e === domEmotion) {
+          ds.borderColor = '#60a5fa';
+          ds.borderWidth = 2;
+        } else {
+          ds.borderColor = 'rgba(255,255,255,0.12)';
+          ds.borderWidth = 1;
+        }
+      });
+      timelineChart.update('none');
+
+      // Donut
+      const counts = EMOTIONS.map(e => state.emotionCounts[e] || 0);
+      donutChart.data.datasets[0].data = counts;
+      donutChart.data.datasets[0].backgroundColor = EMOTIONS.map(e =>
+        e === domEmotion ? '#60a5fa' : 'rgba(255,255,255,0.08)'
+      );
+      donutChart.update('none');
+    }
+
+    // ── SESSION TIMER ──
+    let timerInterval = null;
+    function sessionTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!state.isDetecting || !state.sessionStart) return;
+        const elapsed = Date.now() - state.sessionStart;
+        sessionDuration.textContent = formatTime(elapsed);
+      }, 1000);
+    }
+
+    let chartInterval = null;
+    function chartUpdater() {
+      clearInterval(chartInterval);
+      chartInterval = setInterval(() => {
+        if (!state.isDetecting) return;
+        updateCharts();
+      }, CHART_UPDATE_INTERVAL);
+    }
+
+    // ── SETTINGS ──
+    function openSettings() {
+      settingsPanel.classList.add('open');
+      settingsOverlay.classList.add('open');
+    }
+    function closeSettings() {
+      settingsPanel.classList.remove('open');
+      settingsOverlay.classList.remove('open');
+    }
+
+    // ── EVENTS ──
+    function bindEvents() {
+      // Nav
+      $('#mobile-menu-btn').addEventListener('click', () => {
+        $('#nav-links').classList.toggle('open');
+      });
+      document.querySelectorAll('.nav-link[data-section]').forEach(link => {
+        link.addEventListener('click', () => {
+          document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+          $('#nav-links').classList.remove('open');
+        });
+      });
+
+      // Camera controls
+      btnStart.addEventListener('click', async () => {
+        if (!state.modelsLoaded) return;
+        btnStart.disabled = true;
+        const ok = await startCamera(
+          state.cameras[state.currentCameraIdx]?.deviceId
+        );
+        if (ok) {
+          startDetection();
+          btnStop.disabled = false;
+          if (state.cameras.length > 1) btnSwitch.disabled = false;
+        } else {
+          btnStart.disabled = false;
+        }
+      });
+
+      btnStop.addEventListener('click', () => {
+        stopDetection();
+        stopCamera();
+        btnStart.disabled = false;
+        btnStop.disabled = true;
+        btnSwitch.disabled = true;
+        cameraPlaceholder.style.display = 'flex';
+        setStatus('', 'Stopped');
+        clearInterval(timerInterval);
+        clearInterval(chartInterval);
+        // Flush last emotion to history
+        if (state.lastEmotion) {
+          const dur = Date.now() - state.lastEmotionChange;
+          addHistoryEntry(state.lastEmotion, state.currentConfidence, state.lastEmotionChange, dur);
+        }
+      });
+
+      btnSwitch.addEventListener('click', async () => {
+        if (state.cameras.length < 2) return;
+        state.currentCameraIdx = (state.currentCameraIdx + 1) % state.cameras.length;
+        $('#setting-camera').value = state.currentCameraIdx;
+        const was = state.isDetecting;
+        if (was) stopDetection();
+        await startCamera(state.cameras[state.currentCameraIdx].deviceId);
+        if (was) startDetection();
+      });
+
+      btnExport.addEventListener('click', exportCSV);
+
+      // Settings
+      $('#settings-btn').addEventListener('click', openSettings);
+      $('#settings-close').addEventListener('click', closeSettings);
+      settingsOverlay.addEventListener('click', closeSettings);
+
+      $('#setting-sensitivity').addEventListener('input', (e) => {
+        state.sensitivity = parseInt(e.target.value);
+        document.querySelectorAll('.range-labels span').forEach(s => {
+          s.classList.toggle('active', parseInt(s.dataset.val) === state.sensitivity);
+        });
+      });
+
+      $('#setting-model').addEventListener('change', (e) => {
+        state.modelType = e.target.value;
+      });
+
+      $('#setting-bbox').addEventListener('change', (e) => {
+        state.showBbox = e.target.checked;
+      });
+
+      $('#setting-hud').addEventListener('change', (e) => {
+        state.showHud = e.target.checked;
+        if (!e.target.checked) hudOverlay.style.display = 'none';
+      });
+
+      $('#setting-darkmode').addEventListener('change', (e) => {
+        state.darkMode = e.target.checked;
+        document.documentElement.classList.toggle('dark', e.target.checked);
+        document.documentElement.classList.toggle('light', !e.target.checked);
+      });
+
+      $('#setting-camera').addEventListener('change', async (e) => {
+        const idx = parseInt(e.target.value);
+        if (isNaN(idx)) return;
+        state.currentCameraIdx = idx;
+        if (state.stream) {
+          const was = state.isDetecting;
+          if (was) stopDetection();
+          await startCamera(state.cameras[idx].deviceId);
+          if (was) startDetection();
+        }
+      });
+
+      // Keyboard: Escape closes settings
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && settingsPanel.classList.contains('open')) {
+          closeSettings();
+        }
+      });
+    }
+
+    // ── HELPERS ──
+    function formatTime(ms) {
+      const s = Math.floor(ms / 1000);
+      const m = Math.floor(s / 60);
+      const h = Math.floor(m / 60);
+      const sec = String(s % 60).padStart(2, '0');
+      const min = String(m % 60).padStart(2, '0');
+      if (h > 0) return `${h}:${min}:${sec}`;
+      return `${min}:${sec}`;
+    }
+
+    function formatDuration(ms) {
+      if (ms < 1000) return `${ms}ms`;
+      const s = (ms / 1000).toFixed(1);
+      if (s < 60) return `${s}s`;
+      const m = Math.floor(ms / 60000);
+      const rem = Math.round((ms % 60000) / 1000);
+      return `${m}m ${rem}s`;
+    }
+
+    // ── WAIT FOR DEPS ──
+    function waitForDeps() {
+      return new Promise((resolve) => {
+        const check = () => {
+          if (typeof faceapi !== 'undefined' && typeof Chart !== 'undefined') {
+            resolve();
+          } else {
+            setTimeout(check, 100);
+          }
+        };
+        check();
+      });
+    }
+
+    // ── BOOT ──
+    waitForDeps().then(init);
+  })();
+  </script>
+</body>
+</html>
