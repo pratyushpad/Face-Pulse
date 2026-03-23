@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabaseConfigured } from '@/lib/supabase'
 import { Logo } from '@/components/Logo'
 
 const MeshGradient = lazy(() =>
@@ -38,8 +39,8 @@ export function LoginPage() {
     setLoading(false)
 
     if (err) {
-      if (err.toLowerCase().includes('fetch') || err.toLowerCase().includes('network')) {
-        setError('Network error — Supabase credentials may not be configured. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in web-app/frontend/.env')
+      if (!supabaseConfigured) {
+        setError('Supabase not configured — add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to web-app/frontend/.env then restart the dev server.')
       } else {
         setError(err)
       }

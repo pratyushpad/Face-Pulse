@@ -81,7 +81,7 @@ export function AppLayout() {
       />
 
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
-        <SidebarBody className="justify-between gap-6 h-full">
+        <SidebarBody className="h-full">
           {/* Top: Logo + Nav */}
           <div className="flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
             {/* Logo */}
@@ -94,6 +94,9 @@ export function AppLayout() {
               <SidebarLinkItem key={link.href} link={link} />
             ))}
           </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
 
           {/* Bottom: Settings + Sign Out + User */}
           <div className="flex flex-col gap-1 border-t border-border-subtle pt-3">

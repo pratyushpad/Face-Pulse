@@ -79,7 +79,7 @@ export const DesktopSidebar = ({
   return (
     <motion.div
       className={cn(
-        'h-full px-3 py-4 hidden md:flex md:flex-col bg-surface border-r border-border-subtle flex-shrink-0',
+        'h-full px-3 py-4 hidden md:flex md:flex-col bg-surface border-r border-border-subtle flex-shrink-0 overflow-hidden',
         className
       )}
       animate={{
@@ -156,6 +156,7 @@ export const SidebarLinkItem = ({
   return (
     <Link
       to={link.href}
+      title={!open ? link.label : undefined}
       className={cn(
         'flex items-center gap-2.5 px-2 py-2 rounded-[6px] group/sidebar transition-colors duration-150 relative',
         isActive
