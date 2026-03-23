@@ -77,7 +77,7 @@ export function HomePage() {
       </nav>
 
       {/* Hero — left-aligned */}
-      <section className="relative z-10 px-8 pt-16 pb-24 max-w-[1200px] mx-auto">
+      <section className="relative z-10 px-8 max-w-[1200px] mx-auto min-h-[calc(100vh-80px)] flex flex-col justify-center">
         <h1 className="text-[52px] font-semibold leading-[1.1] tracking-[-0.03em] text-text-primary max-[768px]:text-[34px] max-w-[640px]">
           Real-time emotion detection from your webcam
         </h1>
