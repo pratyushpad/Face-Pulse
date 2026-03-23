@@ -43,7 +43,7 @@ export function DetectPage() {
   }, [stopDetection, stopCamera])
 
   return (
-    <div className="max-w-content mx-auto px-6 pt-8 pb-12">
+    <div className="max-w-content mx-auto px-4 pt-6 pb-8 md:px-6 md:pt-8 md:pb-12">
       {/* Header */}
       <section className="mb-8">
         <h1 className="text-2xl font-semibold">Detect</h1>
@@ -53,7 +53,7 @@ export function DetectPage() {
       </section>
 
       {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6 lg:gap-12">
         {/* Left: Camera + Controls + Emotion */}
         <div>
           <CameraFeed
@@ -106,7 +106,7 @@ export function DetectPage() {
         </div>
 
         {/* Right: Mini analytics */}
-        <div className="hidden lg:block">
+        <div className="block lg:block">
           <MiniAnalytics />
         </div>
       </div>

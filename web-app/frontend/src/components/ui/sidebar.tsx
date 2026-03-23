@@ -130,12 +130,14 @@ export const SidebarLinkItem = ({
   className?: string
 }) => {
   const location = useLocation()
+  const { setOpen } = useSidebar()
   const isActive = location.pathname === link.href
 
   return (
     <Link
       to={link.href}
       title={link.label}
+      onClick={() => setOpen(false)}
       className={cn(
         'flex items-center gap-2.5 px-2 py-2 rounded-[6px] transition-colors duration-150 relative',
         isActive

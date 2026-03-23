@@ -120,7 +120,7 @@ export function HistoryPage() {
   }, [historyLog, filterEmotion, search])
 
   return (
-    <div className="max-w-content mx-auto px-6 pt-8 pb-12 flex flex-col gap-8">
+    <div className="max-w-content mx-auto px-4 pt-6 pb-8 md:px-6 md:pt-8 md:pb-12 flex flex-col gap-8">
 
 
       {/* Current session log */}
@@ -133,7 +133,7 @@ export function HistoryPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => exportPDF(historyLog, emotionCounts, sessionStart, sessionEnd)}
               disabled={historyLog.length === 0}
@@ -200,7 +200,7 @@ export function HistoryPage() {
 
         {/* Table */}
         <div className="border border-border-subtle rounded-[6px] overflow-hidden">
-          <div className="overflow-y-auto max-h-[calc(100vh-320px)]">
+          <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-320px)]">
             <table className="w-full border-collapse">
               <thead className="bg-surface sticky top-0">
                 <tr>

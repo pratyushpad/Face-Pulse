@@ -26,7 +26,7 @@ export function EmotionDisplay({ result, faceDetected }: EmotionDisplayProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="text-[72px] font-semibold leading-none tracking-[-0.02em] capitalize max-[1024px]:text-[48px] max-[768px]:text-[36px]"
+            className="text-[36px] md:text-[48px] lg:text-[72px] font-semibold leading-none tracking-[-0.02em] capitalize"
           >
             {emotion ? EMOTION_LABELS[emotion] : '—'}
           </motion.span>

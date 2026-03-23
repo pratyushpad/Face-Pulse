@@ -75,7 +75,7 @@ export function AppLayout() {
         </Suspense>
       </div>
       {/* Content above gradient */}
-      <div className="relative z-10 flex h-full w-full">
+      <div className="relative z-10 flex flex-col md:flex-row h-full w-full">
       {/* Hidden video element — keeps stream alive across page navigation */}
       <video
         ref={videoRef}
@@ -86,7 +86,7 @@ export function AppLayout() {
       />
 
       <Sidebar>
-        <SidebarBody className="h-full">
+        <SidebarBody className="md:h-full">
           {/* Top: Logo + Nav */}
           <div className="flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
             {/* Logo — links to home, text shown via CSS group-hover */}
@@ -122,7 +122,7 @@ export function AppLayout() {
       </Sidebar>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         {/* Top bar */}
         <div className="hidden md:flex h-11 items-center justify-end px-5 border-b border-border-subtle bg-base gap-3 flex-shrink-0">
           {isDetecting && (
