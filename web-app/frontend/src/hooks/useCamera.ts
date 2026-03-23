@@ -1,9 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import type { CameraState } from '../types'
 
-export function useCamera(): CameraState & {
-  videoRef: React.RefObject<HTMLVideoElement>
-} {
+export function useCamera() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 

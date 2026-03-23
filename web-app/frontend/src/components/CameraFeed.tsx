@@ -1,238 +1,131 @@
-import {
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useEffect,
-  useCallback,
-} from 'react'
-import type { DetectionResult } from '../types'
-import {
-  BBOX_COLOR,
-  BBOX_SHADOW_BLUR,
-  BBOX_LINE_WIDTH,
-  BBOX_CORNER_LENGTH,
-  EMOTION_COLORS,
-  EMOTION_LABELS,
-} from '../constants'
-
-export interface CameraFeedHandle {
-  takeSnapshot: () => void
-}
+import { useRef, useEffect, useCallback } from 'react'
+import type { DetectionResult, AppSettings } from '../types'
 
 interface CameraFeedProps {
   videoRef: React.RefObject<HTMLVideoElement>
   latestResult: DetectionResult | null
+  faceDetected: boolean
   isDetecting: boolean
+  fps: number
+  latency: number
+  settings: AppSettings
 }
 
-export const CameraFeed = forwardRef<CameraFeedHandle, CameraFeedProps>(
-  ({ videoRef, latestResult, isDetecting }, ref) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null)
-    const animFrameRef = useRef<number | null>(null)
-    const frameCountRef = useRef(0)
-    const lastFpsTimestampRef = useRef(Date.now())
-    const fpsRef = useRef(0)
+export function CameraFeed({
+  videoRef,
+  latestResult,
+  faceDetected,
+  isDetecting,
+  fps,
+  latency,
+  settings,
+}: CameraFeedProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const animRef = useRef<number | null>(null)
 
-    useImperativeHandle(ref, () => ({
-      takeSnapshot: () => {
-        const video = videoRef.current
-        const canvas = canvasRef.current
-        if (!video || !canvas) return
+  const draw = useCallback(() => {
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    if (!video || !canvas) {
+      animRef.current = requestAnimationFrame(draw)
+      return
+    }
 
-        const snap = document.createElement('canvas')
-        snap.width = video.videoWidth || canvas.width
-        snap.height = video.videoHeight || canvas.height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
 
-        const ctx = snap.getContext('2d')
-        if (!ctx) return
+    const rect = video.getBoundingClientRect()
+    if (rect.width > 0 && (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height))) {
+      canvas.width = Math.floor(rect.width)
+      canvas.height = Math.floor(rect.height)
+    }
 
-        ctx.drawImage(video, 0, 0, snap.width, snap.height)
-        if (canvas.width > 0 && canvas.height > 0) {
-          ctx.drawImage(canvas, 0, 0, snap.width, snap.height)
-        }
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-        snap.toBlob((blob) => {
-          if (!blob) return
-          const url = URL.createObjectURL(blob)
-          const anchor = document.createElement('a')
-          anchor.href = url
-          anchor.download = `emovision_snapshot_${Date.now()}.png`
-          anchor.click()
-          URL.revokeObjectURL(url)
-        }, 'image/png')
-      },
-    }))
-
-    const drawFrame = useCallback(() => {
-      const video = videoRef.current
-      const canvas = canvasRef.current
-
-      animFrameRef.current = requestAnimationFrame(drawFrame)
-
-      if (!video || !canvas) return
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-
-      // Sync canvas size to video display size
-      const rect = video.getBoundingClientRect()
-      if (
-        rect.width > 0 &&
-        (canvas.width !== Math.floor(rect.width) ||
-          canvas.height !== Math.floor(rect.height))
-      ) {
-        canvas.width = Math.floor(rect.width)
-        canvas.height = Math.floor(rect.height)
-      }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      // FPS counter
-      frameCountRef.current++
-      const now = Date.now()
-      if (now - lastFpsTimestampRef.current >= 1000) {
-        fpsRef.current = frameCountRef.current
-        frameCountRef.current = 0
-        lastFpsTimestampRef.current = now
-      }
-
+    // HUD overlay
+    if (settings.showHud && isDetecting) {
       ctx.save()
       ctx.font = '11px "JetBrains Mono", monospace'
       ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
       ctx.textAlign = 'right'
-      ctx.fillText(`${fpsRef.current} fps`, canvas.width - 10, 20)
+      ctx.fillText(`${fps} FPS`, canvas.width - 8, 18)
+      ctx.fillText(`${latency}ms`, canvas.width - 8, 32)
       ctx.restore()
+    }
 
-      if (!latestResult || !latestResult.face_detected || !latestResult.face_box) {
-        if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && isDetecting) {
-          ctx.save()
-          ctx.font = '500 13px Inter, sans-serif'
-          ctx.fillStyle = 'rgba(239, 68, 68, 0.9)'
-          ctx.textAlign = 'left'
-          ctx.fillText('No face detected', 12, 28)
-          ctx.restore()
-        }
-        return
-      }
-
-      const { face_box, dominant, confidence } = latestResult
-
-      // Scale bounding box from video source to display dimensions
-      const scaleX =
-        video.videoWidth > 0 ? canvas.width / video.videoWidth : 1
-      const scaleY =
-        video.videoHeight > 0 ? canvas.height / video.videoHeight : 1
-
-      const bx = face_box.x * scaleX
-      const by = face_box.y * scaleY
-      const bw = face_box.w * scaleX
-      const bh = face_box.h * scaleY
-
-      const emotionColor = EMOTION_COLORS[dominant] ?? BBOX_COLOR
-      const cl = BBOX_CORNER_LENGTH
-
-      // Draw bracket-style bounding box corners
+    // No face status
+    if (isDetecting && !faceDetected && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
       ctx.save()
-      ctx.shadowBlur = BBOX_SHADOW_BLUR
-      ctx.shadowColor = emotionColor
-      ctx.strokeStyle = emotionColor
-      ctx.lineWidth = BBOX_LINE_WIDTH
-      ctx.lineCap = 'square'
-
-      ctx.beginPath()
-      ctx.moveTo(bx, by + cl)
-      ctx.lineTo(bx, by)
-      ctx.lineTo(bx + cl, by)
-      ctx.stroke()
-
-      ctx.beginPath()
-      ctx.moveTo(bx + bw - cl, by)
-      ctx.lineTo(bx + bw, by)
-      ctx.lineTo(bx + bw, by + cl)
-      ctx.stroke()
-
-      ctx.beginPath()
-      ctx.moveTo(bx, by + bh - cl)
-      ctx.lineTo(bx, by + bh)
-      ctx.lineTo(bx + cl, by + bh)
-      ctx.stroke()
-
-      ctx.beginPath()
-      ctx.moveTo(bx + bw - cl, by + bh)
-      ctx.lineTo(bx + bw, by + bh)
-      ctx.lineTo(bx + bw, by + bh - cl)
-      ctx.stroke()
-
+      ctx.font = '500 12px "JetBrains Mono", monospace'
+      ctx.fillStyle = 'rgba(163, 163, 163, 0.8)'
+      ctx.textAlign = 'left'
+      ctx.fillText('No face detected', 10, 24)
       ctx.restore()
+    }
 
-      // Emotion label badge above bounding box
-      const emotionName = EMOTION_LABELS[dominant] ?? dominant
-      const labelText = `${emotionName}  ${(confidence * 100).toFixed(0)}%`
+    // Face bounding box
+    if (settings.showBoundingBox && latestResult && faceDetected) {
+      const box = latestResult.faceBox
+      const scaleX = video.videoWidth > 0 ? canvas.width / video.videoWidth : 1
+      const scaleY = video.videoHeight > 0 ? canvas.height / video.videoHeight : 1
 
+      const bx = box.x * scaleX
+      const by = box.y * scaleY
+      const bw = box.width * scaleX
+      const bh = box.height * scaleY
+
+      // Thin white rectangle, no rounded corners
       ctx.save()
-      ctx.font = 'bold 13px "JetBrains Mono", monospace'
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'
+      ctx.lineWidth = 1.5
+      ctx.strokeRect(bx, by, bw, bh)
 
-      const textWidth = ctx.measureText(labelText).width
-      const padX = 8
-      const padY = 5
-      const labelHeight = 22
-      const labelWidth = textWidth + padX * 2
-      const labelX = bx
-      const labelY = Math.max(0, by - labelHeight - 6)
-
-      ctx.shadowBlur = 12
-      ctx.shadowColor = emotionColor
-      ctx.fillStyle = emotionColor + 'dd'
-      ctx.beginPath()
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(labelX, labelY, labelWidth, labelHeight, 4)
-      } else {
-        ctx.rect(labelX, labelY, labelWidth, labelHeight)
-      }
-      ctx.fill()
-
-      ctx.shadowBlur = 0
-      ctx.fillStyle = '#ffffff'
-      ctx.fillText(labelText, labelX + padX, labelY + labelHeight - padY)
+      // Emotion label at top-left of box
+      const labelText = `${latestResult.emotion} ${Math.round(latestResult.confidence * 100)}%`
+      ctx.font = '12px "JetBrains Mono", monospace'
+      const tw = ctx.measureText(labelText).width
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
+      ctx.fillRect(bx, by - 18, tw + 8, 18)
+      ctx.fillStyle = '#f5f5f5'
+      ctx.fillText(labelText, bx + 4, by - 5)
       ctx.restore()
-    }, [videoRef, latestResult, isDetecting])
+    }
 
-    useEffect(() => {
-      animFrameRef.current = requestAnimationFrame(drawFrame)
-      return () => {
-        if (animFrameRef.current !== null) {
-          cancelAnimationFrame(animFrameRef.current)
-        }
-      }
-    }, [drawFrame])
+    animRef.current = requestAnimationFrame(draw)
+  }, [videoRef, latestResult, faceDetected, isDetecting, fps, latency, settings.showBoundingBox, settings.showHud])
 
-    return (
-      <div className="relative w-full h-full overflow-hidden rounded-xl bg-black border border-border min-h-[320px]">
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          playsInline
-          className="w-full h-full block object-cover min-h-[320px]"
-        />
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 pointer-events-none"
-        />
-        {!isDetecting && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-xl">
-            <div className="text-center">
-              <p className="text-white/60 text-sm font-mono">
-                Detection paused
-              </p>
-              <p className="text-white/30 text-xs mt-1">
-                Press Start to begin
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
-)
+  useEffect(() => {
+    animRef.current = requestAnimationFrame(draw)
+    return () => {
+      if (animRef.current) cancelAnimationFrame(animRef.current)
+    }
+  }, [draw])
 
-CameraFeed.displayName = 'CameraFeed'
+  return (
+    <div className="relative w-full aspect-[4/3] bg-surface border border-border-default rounded-[6px] overflow-hidden">
+      <video
+        ref={videoRef}
+        autoPlay
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ transform: 'scaleX(-1)' }}
+      />
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        style={{ transform: 'scaleX(-1)' }}
+      />
+
+      {!isDetecting && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-text-muted">
+          <svg className="w-12 h-12 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          <p className="text-[13px]">Camera feed will appear here</p>
+        </div>
+      )}
+    </div>
+  )
+}

@@ -1,8 +1,3 @@
-/**
- * main.tsx — application entry point.
- * Registers Chart.js components globally and mounts the React app.
- */
-
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
@@ -34,12 +29,12 @@ ChartJS.register(
   Filler
 )
 
-ChartJS.defaults.color = '#9ca3af'
-ChartJS.defaults.borderColor = '#1e1e2e'
-ChartJS.defaults.font.family = 'Inter, sans-serif'
+ChartJS.defaults.color = '#525252'
+ChartJS.defaults.borderColor = 'rgba(255,255,255,0.05)'
+ChartJS.defaults.font.family = '"JetBrains Mono", monospace'
 
 const rootElement = document.getElementById('root')
-if (!rootElement) throw new Error('Root element #root not found in index.html')
+if (!rootElement) throw new Error('Root element #root not found')
 
 createRoot(rootElement).render(
   <StrictMode>

@@ -1,69 +1,46 @@
-export type EmotionKey =
-  | 'angry'
-  | 'fear'
-  | 'happy'
-  | 'sad'
-  | 'surprise'
-  | 'disgust'
-  | 'neutral'
-
-export type EmotionScores = Partial<Record<EmotionKey, number>>
+import type { EmotionKey } from '../constants'
 
 export interface FaceBox {
   x: number
   y: number
-  w: number
-  h: number
+  width: number
+  height: number
 }
 
 export interface DetectionResult {
-  emotions: EmotionScores
-  dominant: EmotionKey | ''
+  emotion: EmotionKey
   confidence: number
-  face_detected: boolean
-  face_box: FaceBox | null
+  expressions: Record<EmotionKey, number>
+  faceBox: FaceBox
 }
 
-export interface HealthResponse {
-  status: string
-  model_loaded: boolean
-  demo_mode: boolean
-}
-
-export interface ModelInfo {
-  model: string
-  classes: string[]
-  n_classes: number
-  parameters: number
-  input_shape: number[]
-  normalization: string
-}
-
-export interface EmotionDataPoint {
-  timestamp: number
-  dominant: EmotionKey
+export interface TimelinePoint {
+  time: number
+  emotion: EmotionKey
   confidence: number
-  emotions: EmotionScores
 }
 
-export interface SessionStats {
-  dominantEmotion: EmotionKey | null
-  dominantPercentage: number
-  volatilityScore: number
-  currentStreakSeconds: number
-  currentStreakEmotion: EmotionKey | null
-  sessionDurationSeconds: number
+export interface HistoryEntry {
+  timestamp: string
+  emotion: EmotionKey
+  confidence: number
+  duration: string
+  durationMs: number
+}
+
+export interface AppSettings {
+  sensitivity: number      // 0=low, 1=medium, 2=high
+  modelType: 'fast' | 'accurate'
+  showBoundingBox: boolean
+  showHud: boolean
+  darkMode: boolean
+  cameraId: string
+}
+
+export interface SessionData {
+  emotionCounts: Record<string, number>
+  timelineData: TimelinePoint[]
+  historyLog: HistoryEntry[]
   totalDetections: number
-  happiestMoment: number | null
-  peakHappiness: number
-}
-
-export interface CameraState {
-  isStreamActive: boolean
-  cameras: MediaDeviceInfo[]
-  selectedCameraId: string
-  error: string | null
-  startCamera: () => Promise<void>
-  stopCamera: () => void
-  switchCamera: (deviceId: string) => void
+  sessionStart: number | null
 }

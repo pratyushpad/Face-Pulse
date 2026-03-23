@@ -1,64 +1,66 @@
-import type { EmotionKey } from '../types'
-
-// API
-export const BACKEND_URL: string =
-  (import.meta.env.VITE_BACKEND_URL as string) ?? 'http://localhost:8000'
-
-// Detection loop
-export const DETECTION_INTERVAL_MS: number = 500
-export const MAX_HISTORY_POINTS: number = 120
-export const SESSION_STATS_INTERVAL_MS: number = 5_000
-
-// Canvas bounding box
-export const BBOX_COLOR: string = '#3b82f6'
-export const BBOX_SHADOW_BLUR: number = 20
-export const BBOX_LINE_WIDTH: number = 2
-export const BBOX_CORNER_LENGTH: number = 16
-
-// Emotion keys, colors, labels, emojis
-export const ALL_EMOTION_KEYS: EmotionKey[] = [
-  'angry',
-  'disgust',
-  'fear',
-  'happy',
+// All 7 emotions returned by face-api.js
+export const ALL_EMOTIONS = [
   'neutral',
+  'happy',
   'sad',
-  'surprise',
-]
+  'angry',
+  'fearful',
+  'disgusted',
+  'surprised',
+] as const
 
-export const EMOTION_COLORS: Record<string, string> = {
-  happy: '#22c55e',
-  sad: '#3b82f6',
-  angry: '#ef4444',
-  fear: '#a855f7',
-  surprise: '#f59e0b',
-  disgust: '#f97316',
-  neutral: '#6b7280',
-}
+export type EmotionKey = (typeof ALL_EMOTIONS)[number]
 
-export const EMOTION_LABELS: Record<string, string> = {
+export const EMOTION_LABELS: Record<EmotionKey, string> = {
+  neutral: 'Neutral',
   happy: 'Happy',
   sad: 'Sad',
   angry: 'Angry',
-  fear: 'Fear',
-  surprise: 'Surprise',
-  disgust: 'Disgust',
-  neutral: 'Neutral',
+  fearful: 'Fearful',
+  disgusted: 'Disgusted',
+  surprised: 'Surprised',
 }
 
-export const EMOTION_EMOJIS: Record<string, string> = {
-  happy: '😄',
-  sad: '😢',
-  angry: '😠',
-  fear: '😨',
-  surprise: '😲',
-  disgust: '🤢',
-  neutral: '😐',
+// Models CDN
+export const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models'
+
+// Detection
+export const DETECTION_INTERVAL_MS = 150
+export const TIMELINE_SAMPLE_MS = 1000
+export const MAX_TIMELINE_POINTS = 60
+export const MAX_HISTORY_ENTRIES = 200
+
+// Sensitivity → face detection score threshold
+export const SENSITIVITY_MAP: Record<number, number> = {
+  0: 0.3,  // low
+  1: 0.5,  // medium
+  2: 0.7,  // high
+}
+
+// Model type → input size
+export const INPUT_SIZE_MAP: Record<string, number> = {
+  fast: 224,
+  accurate: 416,
 }
 
 // Design tokens
-export const COLOR_BACKGROUND: string = '#0a0a0f'
-export const COLOR_SURFACE: string = '#13131a'
-export const COLOR_BORDER: string = '#1e1e2e'
-export const CHART_TEXT_COLOR: string = '#9ca3af'
-export const CHART_GRID_COLOR: string = '#1e1e2e'
+export const COLOR = {
+  base: '#0a0a0a',
+  surface: '#111111',
+  elevated: '#1a1a1a',
+  borderSubtle: 'rgba(255,255,255,0.07)',
+  borderDefault: 'rgba(255,255,255,0.12)',
+  textPrimary: '#f5f5f5',
+  textSecondary: '#a3a3a3',
+  textMuted: '#525252',
+  accent: '#60a5fa',
+  accentHover: '#3b82f6',
+  danger: '#ef4444',
+  success: '#22c55e',
+} as const
+
+// Chart.js theme
+export const CHART_GRID = 'rgba(255,255,255,0.05)'
+export const CHART_TICK = '#525252'
+export const CHART_TOOLTIP_BG = '#1a1a1a'
+export const CHART_TOOLTIP_BORDER = 'rgba(255,255,255,0.1)'

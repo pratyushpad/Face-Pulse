@@ -1,103 +1,67 @@
-import type { ChangeEvent } from 'react'
+import { Play, Square, RefreshCw } from 'lucide-react'
 
 interface ControlsProps {
   isDetecting: boolean
   isStreamActive: boolean
-  cameras: MediaDeviceInfo[]
-  selectedCameraId: string
+  cameras?: MediaDeviceInfo[]
+  hasMultipleCameras: boolean
   error: string | null
   onStart: () => void
   onStop: () => void
-  onSwitchCamera: (deviceId: string) => void
-  onSnapshot: () => void
-  onReset: () => void
+  onSwitch: () => void
 }
 
 export function Controls({
   isDetecting,
   isStreamActive,
-  cameras,
-  selectedCameraId,
+  hasMultipleCameras,
   error,
   onStart,
   onStop,
-  onSwitchCamera,
-  onSnapshot,
-  onReset,
+  onSwitch,
 }: ControlsProps) {
-  const handleCameraChange = (e: ChangeEvent<HTMLSelectElement>): void => {
-    onSwitchCamera(e.target.value)
-  }
-
   return (
-    <div className="w-full">
-      {/* Error banner */}
+    <div>
       {error && (
-        <div className="mb-3 px-4 py-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-mono">
+        <div className="mb-3 px-4 py-2.5 rounded-[6px] bg-danger/10 border border-danger/30 text-danger text-sm font-mono">
           {error}
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          onClick={isDetecting ? onStop : onStart}
-          className={[
-            'flex items-center gap-2 px-5 py-2 rounded-lg font-semibold text-sm transition-all duration-200',
-            isDetecting
-              ? 'bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30'
-              : 'bg-accent/20 border border-accent/50 text-accent hover:bg-accent/30 hover:shadow-glow',
-          ].join(' ')}
-        >
-          {isDetecting ? (
-            <>
-              <span className="inline-block w-2 h-2 rounded-sm bg-red-400" />
-              Stop
-            </>
-          ) : (
-            <>
-              <span className="inline-block w-2 h-2 rounded-full bg-accent animate-pulse" />
-              Start Detection
-            </>
-          )}
-        </button>
+      <div className="flex items-center gap-2 mt-4">
+        {!isDetecting ? (
+          <button
+            onClick={onStart}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-accent border border-accent text-black hover:bg-accent-hover hover:border-accent-hover"
+          >
+            <Play className="w-[14px] h-[14px]" />
+            Start Detection
+          </button>
+        ) : (
+          <button
+            onClick={onStop}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-transparent border border-border-default text-text-primary hover:bg-white/5"
+          >
+            <Square className="w-[14px] h-[14px]" />
+            Stop
+          </button>
+        )}
 
-        <button
-          onClick={onSnapshot}
-          disabled={!isStreamActive}
-          title="Save snapshot"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-border text-white/70 hover:text-white hover:border-accent/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-        >
-          📸 Snapshot
-        </button>
-
-        <button
-          onClick={onReset}
-          title="Clear session history"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-border text-white/70 hover:text-white hover:border-white/30 transition-all duration-200"
-        >
-          ↺ Reset
-        </button>
-
-        {cameras.length > 1 && (
-          <div className="ml-auto">
-            <select
-              value={selectedCameraId}
-              onChange={handleCameraChange}
-              className="px-3 py-2 rounded-lg text-sm font-mono bg-surface border border-border text-white/70 hover:border-accent/50 focus:outline-none focus:border-accent transition-colors cursor-pointer"
-            >
-              {cameras.map((cam, i) => (
-                <option key={cam.deviceId} value={cam.deviceId}>
-                  {cam.label || `Camera ${i + 1}`}
-                </option>
-              ))}
-            </select>
-          </div>
+        {hasMultipleCameras && (
+          <button
+            onClick={onSwitch}
+            disabled={!isStreamActive}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-transparent border border-border-default text-text-primary hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className="w-[14px] h-[14px]" />
+            Switch
+          </button>
         )}
 
         {isDetecting && (
           <div className="flex items-center gap-1.5 ml-auto">
-            <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-xs font-mono text-white/40">LIVE</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+            <span className="text-[11px] font-mono text-text-muted">DETECTING</span>
           </div>
         )}
       </div>

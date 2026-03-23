@@ -1,22 +1,32 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        background: '#0a0a0f',
-        surface: '#13131a',
-        border: '#1e1e2e',
-        accent: '#3b82f6',
-        'accent-light': '#60a5fa',
+        base: '#0a0a0a',
+        surface: '#111111',
+        elevated: '#1a1a1a',
+        'border-subtle': 'rgba(255,255,255,0.07)',
+        'border-default': 'rgba(255,255,255,0.12)',
+        'text-primary': '#f5f5f5',
+        'text-secondary': '#a3a3a3',
+        'text-muted': '#525252',
+        accent: '#60a5fa',
+        'accent-hover': '#3b82f6',
+        danger: '#ef4444',
+        success: '#22c55e',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
+        mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
       },
-      boxShadow: {
-        glow: '0 0 20px rgba(59, 130, 246, 0.15)',
-        'glow-md': '0 0 30px rgba(59, 130, 246, 0.25)',
+      maxWidth: {
+        content: '1280px',
+      },
+      spacing: {
+        'nav': '56px',
       },
     },
   },
