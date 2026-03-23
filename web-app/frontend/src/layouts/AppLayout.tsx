@@ -1,27 +1,23 @@
-import { useEffect } from 'react'
-import { Outlet, useNavigate, Link } from 'react-router-dom'
-import { Camera, Activity, Clock, Info, Settings, LogOut } from 'lucide-react'
+import { useEffect, lazy, Suspense } from 'react'
+import { Outlet, Link } from 'react-router-dom'
+import { Camera, Activity, Clock, Info, Settings } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { Sidebar, SidebarBody, SidebarLinkItem } from '@/components/ui/sidebar'
 import { SettingsPanel } from '@/components/SettingsPanel'
 import { Footer } from '@/components/Footer'
 import { LoadingScreen } from '@/components/LoadingScreen'
-import { useAuth } from '@/contexts/AuthContext'
 import { useSettings } from '@/contexts/SettingsContext'
 import { useCamera2 } from '@/contexts/CameraContext'
 import { useDetection } from '@/contexts/DetectionContext'
 
+const MeshGradient = lazy(() =>
+  import('@paper-design/shaders-react').then((m) => ({ default: m.MeshGradient }))
+)
+
 export function AppLayout() {
-  const { user, signOut } = useAuth()
   const { settings, updateSettings, settingsOpen, setSettingsOpen } = useSettings()
   const { videoRef, cameras, switchCamera, selectedCameraId } = useCamera2()
   const { modelsLoaded, loadingProgress, loadingMessage, loadError, isDetecting } = useDetection()
-  const navigate = useNavigate()
-
-  const handleSignOut = async () => {
-    await signOut()
-    navigate('/login', { replace: true })
-  }
 
   // Sync camera selection from settings
   useEffect(() => {
@@ -56,8 +52,6 @@ export function AppLayout() {
     },
   ]
 
-  const avatarLetter = user?.email?.[0]?.toUpperCase() ?? 'U'
-
   if (!modelsLoaded) {
     return (
       <LoadingScreen
@@ -69,7 +63,19 @@ export function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-base overflow-hidden">
+    <div className="flex h-screen bg-base overflow-hidden relative">
+      {/* Animated mesh gradient background */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-30">
+        <Suspense fallback={null}>
+          <MeshGradient
+            className="w-full h-full"
+            colors={['#000000', '#0a0a0a', '#0f172a', '#1e3a5f']}
+            speed={0.15}
+          />
+        </Suspense>
+      </div>
+      {/* Content above gradient */}
+      <div className="relative z-10 flex h-full w-full">
       {/* Hidden video element — keeps stream alive across page navigation */}
       <video
         ref={videoRef}
@@ -100,7 +106,7 @@ export function AppLayout() {
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Bottom: Settings + Sign Out + User */}
+          {/* Bottom: Settings */}
           <div className="flex flex-col gap-1 border-t border-border-subtle pt-3">
             <button
               onClick={() => setSettingsOpen(true)}
@@ -111,26 +117,6 @@ export function AppLayout() {
                 Settings
               </span>
             </button>
-
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-2.5 px-2 py-2 rounded-[6px] text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors duration-150 w-full cursor-pointer"
-            >
-              <LogOut className="w-5 h-5 flex-shrink-0" />
-              <span className="text-[13px] font-medium whitespace-nowrap text-left opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                Sign Out
-              </span>
-            </button>
-
-            {/* User avatar */}
-            <div className="flex items-center gap-2.5 px-2 py-2 mt-1">
-              <div className="w-7 h-7 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center flex-shrink-0">
-                <span className="text-[11px] font-semibold text-accent">{avatarLetter}</span>
-              </div>
-              <span className="text-[12px] text-text-muted truncate max-w-[160px] opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                {user?.email ?? 'Guest'}
-              </span>
-            </div>
           </div>
         </SidebarBody>
       </Sidebar>
@@ -169,6 +155,7 @@ export function AppLayout() {
         onClose={() => setSettingsOpen(false)}
         onUpdate={updateSettings}
       />
+      </div>{/* end z-10 wrapper */}
     </div>
   )
 }

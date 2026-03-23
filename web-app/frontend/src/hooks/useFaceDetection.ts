@@ -20,6 +20,9 @@ function formatDuration(ms: number): string {
   return `${m}m ${rem}s`
 }
 
+const SESSION_WARN_MS = 5 * 60 * 1000   // 5 minutes
+const SESSION_MAX_MS  = 10 * 60 * 1000  // 10 minutes
+
 interface FaceDetectionState {
   modelsLoaded: boolean
   loadingProgress: number
@@ -34,6 +37,7 @@ interface FaceDetectionState {
   totalDetections: number
   sessionStart: number | null
   sessionEnd: number | null
+  sessionWarning: string | null
   fps: number
   latency: number
   startDetection: () => void
@@ -58,6 +62,7 @@ export function useFaceDetection(
   const [totalDetections, setTotalDetections] = useState(0)
   const [sessionStart, setSessionStart] = useState<number | null>(null)
   const [sessionEnd, setSessionEnd] = useState<number | null>(null)
+  const [sessionWarning, setSessionWarning] = useState<string | null>(null)
   const [fps, setFps] = useState(0)
   const [latency, setLatency] = useState(0)
 
@@ -72,6 +77,8 @@ export function useFaceDetection(
   const lastConfidenceRef = useRef(0)
   const settingsRef = useRef(settings)
   settingsRef.current = settings
+  const sessionStartRef = useRef<number | null>(null)
+  const warnFiredRef = useRef(false)
 
   // Wait for face-api.js CDN script to load
   const waitForFaceApi = useCallback((): Promise<void> => {
@@ -207,6 +214,19 @@ export function useFaceDetection(
         lastFpsTimeRef.current = now
       }
 
+      // Session timeout checks
+      if (sessionStartRef.current) {
+        const elapsed = Date.now() - sessionStartRef.current
+        if (elapsed >= SESSION_MAX_MS) {
+          setSessionWarning('Session ended — 10 minute limit reached. Start a new session to continue.')
+          stopDetection()
+          return
+        } else if (elapsed >= SESSION_WARN_MS && !warnFiredRef.current) {
+          warnFiredRef.current = true
+          setSessionWarning('Halfway through session — auto-pause in 5 minutes.')
+        }
+      }
+
       // Throttled detection
       if (now - lastDetectionRef.current >= DETECTION_INTERVAL_MS) {
         lastDetectionRef.current = now
@@ -220,13 +240,17 @@ export function useFaceDetection(
   const startDetection = useCallback(() => {
     if (isDetectingRef.current) return
     isDetectingRef.current = true
+    const now = Date.now()
+    sessionStartRef.current = now
+    warnFiredRef.current = false
     setIsDetecting(true)
-    setSessionStart(Date.now())
+    setSessionStart(now)
     setSessionEnd(null)
+    setSessionWarning(null)
     lastFpsTimeRef.current = performance.now()
     frameCountRef.current = 0
     lastEmotionRef.current = null
-    lastEmotionChangeRef.current = Date.now()
+    lastEmotionChangeRef.current = now
     lastTimelineSampleRef.current = 0
     detectLoop()
   }, [detectLoop])
@@ -260,8 +284,11 @@ export function useFaceDetection(
     setTotalDetections(0)
     setSessionStart(null)
     setSessionEnd(null)
+    setSessionWarning(null)
     setLatestResult(null)
     setFaceDetected(false)
+    sessionStartRef.current = null
+    warnFiredRef.current = false
     lastEmotionRef.current = null
   }, [])
 
@@ -287,6 +314,7 @@ export function useFaceDetection(
     totalDetections,
     sessionStart,
     sessionEnd,
+    sessionWarning,
     fps,
     latency,
     startDetection,

@@ -4,6 +4,7 @@ import type { ChartData, ChartOptions } from 'chart.js'
 import {
   ALL_EMOTIONS,
   EMOTION_LABELS,
+  EMOTION_COLORS,
   CHART_GRID,
   CHART_TICK,
   CHART_TOOLTIP_BG,
@@ -70,8 +71,8 @@ export function AnalyticsPanel({
       datasets: ALL_EMOTIONS.map((e) => ({
         label: EMOTION_LABELS[e],
         data: recent.map((d) => (d.emotion === e ? d.confidence : 0)),
-        borderColor: e === dominant ? COLOR.accent : 'rgba(255,255,255,0.12)',
-        borderWidth: e === dominant ? 2 : 1,
+        borderColor: EMOTION_COLORS[e],
+        borderWidth: e === dominant ? 2.5 : 1.5,
         pointRadius: 0,
         tension: 0.3,
         fill: false,
@@ -126,9 +127,7 @@ export function AnalyticsPanel({
       datasets: [
         {
           data: counts,
-          backgroundColor: ALL_EMOTIONS.map((e) =>
-            e === dominant ? COLOR.accent : 'rgba(255,255,255,0.08)'
-          ),
+          backgroundColor: ALL_EMOTIONS.map((e) => EMOTION_COLORS[e]),
           borderColor: 'rgba(255,255,255,0.03)',
           borderWidth: 1,
           hoverOffset: 4,
@@ -260,7 +259,6 @@ export function AnalyticsPanel({
               {ALL_EMOTIONS.map((e) => {
                 const count = emotionCounts[e] || 0
                 const barWidth = Math.round((count / maxCount) * 60)
-                const isDom = e === dominant
                 return (
                   <tr key={e}>
                     <td className="py-2 text-[13px] capitalize border-b border-border-subtle text-text-secondary">
@@ -269,8 +267,8 @@ export function AnalyticsPanel({
                     <td className="py-2 text-[13px] font-mono text-text-secondary text-right border-b border-border-subtle">
                       {count}
                       <span
-                        className={`inline-block h-[3px] rounded-[1px] align-middle ml-2 transition-[width] duration-300 ease-out ${isDom ? 'bg-accent' : 'bg-text-muted'}`}
-                        style={{ width: `${barWidth}px` }}
+                        className="inline-block h-[3px] rounded-[1px] align-middle ml-2 transition-[width] duration-300 ease-out"
+                        style={{ width: `${barWidth}px`, backgroundColor: EMOTION_COLORS[e] }}
                       />
                     </td>
                   </tr>

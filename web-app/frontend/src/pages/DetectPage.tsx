@@ -25,6 +25,7 @@ export function DetectPage() {
     isDetecting,
     fps,
     latency,
+    sessionWarning,
     startDetection,
     stopDetection,
   } = useDetection()
@@ -47,7 +48,7 @@ export function DetectPage() {
       <section className="mb-8">
         <h1 className="text-2xl font-semibold">Detect</h1>
         <p className="text-[15px] text-text-secondary mt-2 max-w-[480px]">
-          Real-time facial emotion analysis. All processing runs locally in your browser.
+          Real-time facial emotion analysis. Session data is temporary and cleared when you leave.
         </p>
       </section>
 
@@ -91,6 +92,12 @@ export function DetectPage() {
             onStop={handleStop}
             onSwitch={handleSwitchCamera}
           />
+
+          {sessionWarning && (
+            <div className="mt-3 px-4 py-2.5 rounded-[8px] bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[13px] leading-[1.5]">
+              {sessionWarning}
+            </div>
+          )}
 
           <EmotionDisplay
             result={latestResult}

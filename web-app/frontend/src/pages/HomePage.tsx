@@ -48,16 +48,10 @@ export function HomePage() {
         <Logo size={22} showText />
         <div className="flex items-center gap-3">
           <Link
-            to="/login"
-            className="text-[13px] text-text-secondary hover:text-text-primary transition-colors"
-          >
-            Sign In
-          </Link>
-          <Link
-            to="/login?mode=signup"
+            to="/detect"
             className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-[6px] bg-accent border border-accent text-black hover:bg-accent-hover transition-colors duration-150"
           >
-            Get Started
+            Open App
           </Link>
         </div>
       </nav>
@@ -75,7 +69,7 @@ export function HomePage() {
 
         <div className="flex items-center gap-3 mt-9 flex-wrap">
           <Link
-            to="/login?mode=signup"
+            to="/detect"
             className="inline-flex items-center gap-2 px-5 py-2.5 text-[14px] font-medium rounded-[8px] bg-accent border border-accent text-black hover:bg-accent-hover transition-colors duration-150"
           >
             Start detecting
@@ -96,7 +90,7 @@ export function HomePage() {
           {features.map((f) => (
             <Link
               key={f.href}
-              to="/login?mode=signup"
+              to={f.href}
               className="group flex flex-col gap-4 p-8 bg-surface border border-border-subtle rounded-[10px] hover:border-border-default hover:shadow-[0_0_24px_rgba(96,165,250,0.07)] transition-all duration-200"
             >
               <div className="w-10 h-10 rounded-[7px] bg-accent/10 border border-accent/20 flex items-center justify-center">

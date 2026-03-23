@@ -43,6 +43,17 @@ export const INPUT_SIZE_MAP: Record<string, number> = {
   accurate: 416,
 }
 
+// Per-emotion colors for charts and UI
+export const EMOTION_COLORS: Record<EmotionKey, string> = {
+  neutral:   '#94a3b8', // slate-400
+  happy:     '#60a5fa', // blue-400
+  sad:       '#818cf8', // indigo-400
+  angry:     '#f87171', // red-400
+  fearful:   '#a78bfa', // violet-400
+  disgusted: '#34d399', // emerald-400
+  surprised: '#fbbf24', // amber-400
+}
+
 // Design tokens
 export const COLOR = {
   base: '#0a0a0a',

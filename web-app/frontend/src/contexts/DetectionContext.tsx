@@ -1,6 +1,5 @@
 import { createContext, useContext } from 'react'
 import { useFaceDetection } from '@/hooks/useFaceDetection'
-import { useSessionPersistence } from '@/hooks/useSessionPersistence'
 import { useCamera2 } from './CameraContext'
 import { useSettings } from './SettingsContext'
 import type { DetectionResult, TimelinePoint, HistoryEntry } from '@/types'
@@ -19,6 +18,7 @@ interface DetectionContextValue {
   totalDetections: number
   sessionStart: number | null
   sessionEnd: number | null
+  sessionWarning: string | null
   fps: number
   latency: number
   startDetection: () => void
@@ -33,14 +33,6 @@ export function DetectionProvider({ children }: { children: React.ReactNode }) {
   const { settings } = useSettings()
 
   const detection = useFaceDetection(videoRef, settings)
-
-  useSessionPersistence({
-    isDetecting: detection.isDetecting,
-    sessionStart: detection.sessionStart,
-    historyLog: detection.historyLog,
-    emotionCounts: detection.emotionCounts,
-    totalDetections: detection.totalDetections,
-  })
 
   return (
     <DetectionContext.Provider value={detection}>
