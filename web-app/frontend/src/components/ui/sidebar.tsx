@@ -14,7 +14,6 @@ export interface SidebarLink {
 interface SidebarContextProps {
   open: boolean
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
-  animate: boolean
 }
 
 const SidebarContext = createContext<SidebarContextProps | undefined>(undefined)
@@ -27,21 +26,13 @@ export const useSidebar = () => {
 
 export const SidebarProvider = ({
   children,
-  open: openProp,
-  setOpen: setOpenProp,
-  animate = true,
 }: {
   children: React.ReactNode
-  open?: boolean
-  setOpen?: React.Dispatch<React.SetStateAction<boolean>>
-  animate?: boolean
 }) => {
-  const [openState, setOpenState] = useState(false)
-  const open = openProp !== undefined ? openProp : openState
-  const setOpen = setOpenProp !== undefined ? setOpenProp : setOpenState
+  const [open, setOpen] = useState(false)
 
   return (
-    <SidebarContext.Provider value={{ open, setOpen, animate }}>
+    <SidebarContext.Provider value={{ open, setOpen }}>
       {children}
     </SidebarContext.Provider>
   )
@@ -49,51 +40,39 @@ export const SidebarProvider = ({
 
 export const Sidebar = ({
   children,
-  open,
-  setOpen,
-  animate,
 }: {
   children: React.ReactNode
-  open?: boolean
-  setOpen?: React.Dispatch<React.SetStateAction<boolean>>
-  animate?: boolean
 }) => (
-  <SidebarProvider open={open} setOpen={setOpen} animate={animate}>
+  <SidebarProvider>
     {children}
   </SidebarProvider>
 )
 
-export const SidebarBody = (props: React.ComponentProps<typeof motion.div>) => (
+export const SidebarBody = (props: React.ComponentProps<'div'>) => (
   <>
     <DesktopSidebar {...props} />
-    <MobileSidebar {...(props as React.ComponentProps<'div'>)} />
+    <MobileSidebar {...props} />
   </>
 )
 
+// CSS-only hover: no JavaScript state, no framer-motion width animation.
+// overflow-hidden + w-14 hover:w-60 transition-[width] is handled entirely by the browser —
+// immune to the spurious mouseleave events that framer-motion width animation triggers.
 export const DesktopSidebar = ({
   className,
   children,
   ...props
-}: React.ComponentProps<typeof motion.div>) => {
-  const { open, setOpen, animate } = useSidebar()
-  return (
-    <motion.div
-      className={cn(
-        'h-full px-3 py-4 hidden md:flex md:flex-col bg-surface border-r border-border-subtle flex-shrink-0 overflow-hidden',
-        className
-      )}
-      animate={{
-        width: animate ? (open ? '240px' : '56px') : '240px',
-      }}
-      transition={{ duration: 0.2, ease: 'easeInOut' }}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  )
-}
+}: React.ComponentProps<'div'>) => (
+  <div
+    className={cn(
+      'h-full px-3 py-4 hidden md:flex md:flex-col bg-surface border-r border-border-subtle flex-shrink-0 overflow-hidden w-14 hover:w-60 transition-[width] duration-200 ease-in-out group',
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </div>
+)
 
 export const MobileSidebar = ({
   className,
@@ -150,19 +129,18 @@ export const SidebarLinkItem = ({
   link: SidebarLink
   className?: string
 }) => {
-  const { open, animate } = useSidebar()
   const location = useLocation()
   const isActive = location.pathname === link.href
 
   return (
     <Link
       to={link.href}
-      title={!open ? link.label : undefined}
+      title={link.label}
       className={cn(
-        'flex items-center gap-2.5 px-2 py-2 rounded-[6px] group/sidebar transition-colors duration-150 relative',
+        'flex items-center gap-2.5 px-2 py-2 rounded-[6px] transition-colors duration-150 relative',
         isActive
           ? 'bg-white/5 text-text-primary'
-          : 'text-text-secondary hover:text-text-primary hover:bg-white/3',
+          : 'text-text-secondary hover:text-text-primary hover:bg-white/5',
         className
       )}
     >
@@ -170,25 +148,18 @@ export const SidebarLinkItem = ({
         {link.icon}
       </span>
 
-      <motion.span
-        animate={{
-          display: animate ? (open ? 'inline-block' : 'none') : 'inline-block',
-          opacity: animate ? (open ? 1 : 0) : 1,
-        }}
-        className="text-[13px] font-medium whitespace-pre !p-0 !m-0 flex-1"
-      >
+      <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[13px] font-medium whitespace-nowrap flex-1">
         {link.label}
-      </motion.span>
+      </span>
 
-      {link.badge && open && (
-        <span className="ml-auto">{link.badge}</span>
+      {link.badge && (
+        <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+          {link.badge}
+        </span>
       )}
 
       {isActive && (
-        <motion.span
-          layoutId="activeIndicator"
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-accent rounded-r-full"
-        />
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-accent rounded-r-full" />
       )}
     </Link>
   )

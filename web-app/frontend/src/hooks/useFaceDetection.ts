@@ -33,6 +33,7 @@ interface FaceDetectionState {
   historyLog: HistoryEntry[]
   totalDetections: number
   sessionStart: number | null
+  sessionEnd: number | null
   fps: number
   latency: number
   startDetection: () => void
@@ -56,6 +57,7 @@ export function useFaceDetection(
   const [historyLog, setHistoryLog] = useState<HistoryEntry[]>([])
   const [totalDetections, setTotalDetections] = useState(0)
   const [sessionStart, setSessionStart] = useState<number | null>(null)
+  const [sessionEnd, setSessionEnd] = useState<number | null>(null)
   const [fps, setFps] = useState(0)
   const [latency, setLatency] = useState(0)
 
@@ -220,6 +222,7 @@ export function useFaceDetection(
     isDetectingRef.current = true
     setIsDetecting(true)
     setSessionStart(Date.now())
+    setSessionEnd(null)
     lastFpsTimeRef.current = performance.now()
     frameCountRef.current = 0
     lastEmotionRef.current = null
@@ -231,6 +234,7 @@ export function useFaceDetection(
   const stopDetection = useCallback(() => {
     isDetectingRef.current = false
     setIsDetecting(false)
+    setSessionEnd(Date.now())
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
     // Flush last emotion to history
     if (lastEmotionRef.current) {
@@ -255,6 +259,7 @@ export function useFaceDetection(
     setHistoryLog([])
     setTotalDetections(0)
     setSessionStart(null)
+    setSessionEnd(null)
     setLatestResult(null)
     setFaceDetected(false)
     lastEmotionRef.current = null
@@ -281,6 +286,7 @@ export function useFaceDetection(
     historyLog,
     totalDetections,
     sessionStart,
+    sessionEnd,
     fps,
     latency,
     startDetection,

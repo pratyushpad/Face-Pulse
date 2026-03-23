@@ -1,10 +1,13 @@
-import { useCallback } from 'react'
+import { useCallback, useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { CameraFeed } from '@/components/CameraFeed'
 import { Controls } from '@/components/Controls'
 import { EmotionDisplay } from '@/components/EmotionDisplay'
 import { useCamera2 } from '@/contexts/CameraContext'
 import { useDetection } from '@/contexts/DetectionContext'
 import { useSettings } from '@/contexts/SettingsContext'
+import { EMOTION_LABELS } from '@/constants'
+import type { EmotionKey } from '@/constants'
 
 export function DetectPage() {
   const {
@@ -106,9 +109,20 @@ export function DetectPage() {
 }
 
 function MiniAnalytics() {
-  const { totalDetections, sessionStart, emotionCounts, isDetecting } = useDetection()
+  const { totalDetections, sessionStart, sessionEnd, emotionCounts, isDetecting } = useDetection()
 
-  const elapsed = sessionStart && isDetecting ? Date.now() - sessionStart : 0
+  // Tick every second while detecting so the timer updates live
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    if (!isDetecting) return
+    const id = setInterval(() => setTick((t) => t + 1), 1000)
+    return () => clearInterval(id)
+  }, [isDetecting])
+
+  const elapsed = sessionStart
+    ? (isDetecting ? Date.now() : (sessionEnd ?? sessionStart)) - sessionStart
+    : 0
+
   const formatTime = (ms: number) => {
     const s = Math.floor(ms / 1000)
     const m = Math.floor(s / 60)
@@ -144,7 +158,9 @@ function MiniAnalytics() {
         {dominant && (
           <div>
             <div className="text-[11px] text-text-muted mb-1">Dominant</div>
-            <div className="text-[18px] font-semibold text-accent capitalize">{dominant}</div>
+            <div className="text-[18px] font-semibold text-accent capitalize">
+              {EMOTION_LABELS[dominant as EmotionKey] ?? dominant}
+            </div>
           </div>
         )}
 
@@ -153,12 +169,12 @@ function MiniAnalytics() {
         )}
       </div>
 
-      <a
-        href="/dashboard"
+      <Link
+        to="/dashboard"
         className="text-[12px] text-text-muted hover:text-text-primary transition-colors duration-150"
       >
         View full dashboard →
-      </a>
+      </Link>
     </div>
   )
 }

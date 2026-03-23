@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Line, Doughnut } from 'react-chartjs-2'
 import type { ChartData, ChartOptions } from 'chart.js'
 import {
@@ -14,6 +14,7 @@ import type { TimelinePoint } from '@/types'
 
 interface AnalyticsPanelProps {
   sessionStart: number | null
+  sessionEnd: number | null
   totalDetections: number
   emotionCounts: Record<string, number>
   timelineData: TimelinePoint[]
@@ -30,16 +31,29 @@ function formatTime(ms: number): string {
   return `${min}:${sec}`
 }
 
+const card = 'bg-surface border border-border-subtle rounded-[12px] p-5'
+
 export function AnalyticsPanel({
   sessionStart,
+  sessionEnd,
   totalDetections,
   emotionCounts,
   timelineData,
   isDetecting,
 }: AnalyticsPanelProps) {
-  const elapsed = sessionStart && isDetecting ? Date.now() - sessionStart : 0
+  // Tick every second while detecting so the timer counts up live
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    if (!isDetecting) return
+    const id = setInterval(() => setTick((t) => t + 1), 1000)
+    return () => clearInterval(id)
+  }, [isDetecting])
 
-  // Dominant emotion
+  // During detection: live count-up. After stop: frozen at final duration. Never started: 0.
+  const elapsed = sessionStart
+    ? (isDetecting ? Date.now() : (sessionEnd ?? sessionStart)) - sessionStart
+    : 0
+
   const dominant = useMemo(() => {
     const entries = Object.entries(emotionCounts).filter(([, v]) => v > 0)
     if (entries.length === 0) return null
@@ -47,7 +61,6 @@ export function AnalyticsPanel({
     return entries[0][0]
   }, [emotionCounts])
 
-  // Timeline chart
   const timelineChartData: ChartData<'line'> = useMemo(() => {
     const recent = timelineData.slice(-60)
     return {
@@ -106,7 +119,6 @@ export function AnalyticsPanel({
     []
   )
 
-  // Donut chart
   const donutData: ChartData<'doughnut'> = useMemo(() => {
     const counts = ALL_EMOTIONS.map((e) => emotionCounts[e] || 0)
     return {
@@ -156,48 +168,50 @@ export function AnalyticsPanel({
     []
   )
 
-  // Max count for expression table bars
   const maxCount = Math.max(...Object.values(emotionCounts), 1)
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* Session stats */}
-      <div>
-        <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
-          Session
-        </span>
-        <div className="flex gap-8 mt-2">
-          <div>
-            <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">Duration</span>
-            <div className="text-[32px] font-semibold font-mono tracking-tight">
-              {formatTime(elapsed)}
-            </div>
+    <div className="flex flex-col gap-4">
+
+      {/* Row 1: Stat cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Duration */}
+        <div className={card}>
+          <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+            Duration
+          </span>
+          <div className="text-[28px] font-semibold font-mono tracking-tight mt-2 text-text-primary">
+            {formatTime(elapsed)}
           </div>
-          <div>
-            <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">Detections</span>
-            <div className="text-[32px] font-semibold font-mono tracking-tight">
-              {totalDetections}
-            </div>
+        </div>
+
+        {/* Detections */}
+        <div className={card}>
+          <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+            Detections
+          </span>
+          <div className="text-[28px] font-semibold font-mono tracking-tight mt-2 text-text-primary">
+            {totalDetections}
+          </div>
+        </div>
+
+        {/* Dominant emotion */}
+        <div className={`${card} md:col-span-2`}>
+          <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+            Dominant Emotion
+          </span>
+          <div className="text-[28px] font-semibold mt-2 capitalize text-accent">
+            {dominant ? EMOTION_LABELS[dominant as keyof typeof EMOTION_LABELS] : '—'}
           </div>
         </div>
       </div>
 
-      {/* Dominant emotion */}
-      <div>
-        <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
-          Dominant Emotion
-        </span>
-        <div className="text-[32px] font-semibold text-accent mt-2 capitalize">
-          {dominant ? EMOTION_LABELS[dominant as keyof typeof EMOTION_LABELS] : '—'}
-        </div>
-      </div>
-
-      {/* Timeline chart */}
-      <div>
-        <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
+      {/* Row 2: Timeline */}
+      <div className={card}>
+        <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
           Emotion Timeline
         </span>
-        <div className="relative w-full h-[200px] mt-3">
+        <div className="relative w-full h-[200px] mt-4">
           {timelineData.length > 1 ? (
             <Line data={timelineChartData} options={timelineOptions} />
           ) : (
@@ -208,57 +222,65 @@ export function AnalyticsPanel({
         </div>
       </div>
 
-      {/* Distribution donut */}
-      <div>
-        <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
-          Session Distribution
-        </span>
-        <div className="relative w-full h-[180px] mt-3">
-          {totalDetections > 0 ? (
-            <Doughnut data={donutData} options={donutOptions} />
-          ) : (
-            <div className="h-full flex items-center justify-center text-text-muted text-[13px] font-mono">
-              No data yet
-            </div>
-          )}
+      {/* Row 3: Donut + Table */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Session distribution */}
+        <div className={card}>
+          <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+            Session Distribution
+          </span>
+          <div className="relative w-full h-[180px] mt-4">
+            {totalDetections > 0 ? (
+              <Doughnut data={donutData} options={donutOptions} />
+            ) : (
+              <div className="h-full flex items-center justify-center text-text-muted text-[13px] font-mono">
+                No data yet
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Expressions table */}
+        <div className={card}>
+          <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+            Expressions Detected
+          </span>
+          <table className="w-full mt-3 border-collapse">
+            <thead>
+              <tr>
+                <th className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted text-left py-2 border-b border-border-subtle">
+                  Emotion
+                </th>
+                <th className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted text-right py-2 border-b border-border-subtle">
+                  Count
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {ALL_EMOTIONS.map((e) => {
+                const count = emotionCounts[e] || 0
+                const barWidth = Math.round((count / maxCount) * 60)
+                const isDom = e === dominant
+                return (
+                  <tr key={e}>
+                    <td className="py-2 text-[13px] capitalize border-b border-border-subtle text-text-secondary">
+                      {EMOTION_LABELS[e]}
+                    </td>
+                    <td className="py-2 text-[13px] font-mono text-text-secondary text-right border-b border-border-subtle">
+                      {count}
+                      <span
+                        className={`inline-block h-[3px] rounded-[1px] align-middle ml-2 transition-[width] duration-300 ease-out ${isDom ? 'bg-accent' : 'bg-text-muted'}`}
+                        style={{ width: `${barWidth}px` }}
+                      />
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Expressions table */}
-      <div>
-        <span className="text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
-          Expressions Detected
-        </span>
-        <table className="w-full mt-2 border-collapse">
-          <thead>
-            <tr>
-              <th className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted text-left py-2 border-b border-border-subtle">Emotion</th>
-              <th className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted text-right py-2 border-b border-border-subtle">Count</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ALL_EMOTIONS.map((e) => {
-              const count = emotionCounts[e] || 0
-              const barWidth = Math.round((count / maxCount) * 60)
-              const isDom = e === dominant
-              return (
-                <tr key={e}>
-                  <td className="py-2 text-[13px] capitalize border-b border-border-subtle">
-                    {EMOTION_LABELS[e]}
-                  </td>
-                  <td className="py-2 text-[13px] font-mono text-text-secondary text-right border-b border-border-subtle">
-                    {count}
-                    <span
-                      className={`inline-block h-[3px] rounded-[1px] align-middle ml-2 transition-[width] duration-300 ease-out ${isDom ? 'bg-accent' : 'bg-text-muted'}`}
-                      style={{ width: `${barWidth}px` }}
-                    />
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
     </div>
   )
 }

@@ -63,8 +63,8 @@ export function HomePage() {
       </nav>
 
       {/* Hero — left-aligned */}
-      <section className="relative z-10 px-8 pt-24 pb-32 max-w-[1200px] mx-auto">
-        <h1 className="text-[52px] font-semibold leading-[1.1] tracking-[-0.03em] text-text-primary max-[768px]:text-[34px] max-w-[640px]">
+      <section className="relative z-10 px-8 pt-32 pb-40 max-w-[1200px] mx-auto">
+        <h1 className="text-[64px] font-semibold leading-[1.1] tracking-[-0.03em] text-text-primary max-[768px]:text-[40px] max-w-[700px]">
           Real-time emotion detection from your webcam
         </h1>
 
@@ -97,10 +97,10 @@ export function HomePage() {
             <Link
               key={f.href}
               to="/login?mode=signup"
-              className="group flex flex-col gap-4 p-6 bg-surface border border-border-subtle rounded-[10px] hover:border-border-default hover:shadow-[0_0_24px_rgba(96,165,250,0.07)] transition-all duration-200"
+              className="group flex flex-col gap-4 p-8 bg-surface border border-border-subtle rounded-[10px] hover:border-border-default hover:shadow-[0_0_24px_rgba(96,165,250,0.07)] transition-all duration-200"
             >
-              <div className="w-8 h-8 rounded-[7px] bg-accent/10 border border-accent/20 flex items-center justify-center">
-                <f.icon className="w-4 h-4 text-accent" />
+              <div className="w-10 h-10 rounded-[7px] bg-accent/10 border border-accent/20 flex items-center justify-center">
+                <f.icon className="w-5 h-5 text-accent" />
               </div>
               <div>
                 <h3 className="text-[14px] font-semibold mb-1.5">{f.title}</h3>

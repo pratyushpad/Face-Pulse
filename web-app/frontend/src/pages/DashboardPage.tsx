@@ -4,6 +4,7 @@ import { AnalyticsPanel } from '@/components/AnalyticsPanel'
 export function DashboardPage() {
   const {
     sessionStart,
+    sessionEnd,
     totalDetections,
     emotionCounts,
     timelineData,
@@ -34,6 +35,7 @@ export function DashboardPage() {
 
       <AnalyticsPanel
         sessionStart={sessionStart}
+        sessionEnd={sessionEnd}
         totalDetections={totalDetections}
         emotionCounts={emotionCounts}
         timelineData={timelineData}

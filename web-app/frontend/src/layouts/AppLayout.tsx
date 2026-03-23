@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Outlet, useNavigate, Link } from 'react-router-dom'
 import { Camera, Activity, Clock, Info, Settings, LogOut } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { Sidebar, SidebarBody, SidebarLinkItem } from '@/components/ui/sidebar'
@@ -17,7 +17,6 @@ export function AppLayout() {
   const { videoRef, cameras, switchCamera, selectedCameraId } = useCamera2()
   const { modelsLoaded, loadingProgress, loadingMessage, loadError, isDetecting } = useDetection()
   const navigate = useNavigate()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
@@ -80,14 +79,17 @@ export function AppLayout() {
         autoPlay
       />
 
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen}>
+      <Sidebar>
         <SidebarBody className="h-full">
           {/* Top: Logo + Nav */}
           <div className="flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
-            {/* Logo */}
-            <div className="px-2 py-2 mb-4">
-              <Logo size={20} showText={sidebarOpen} />
-            </div>
+            {/* Logo — links to home, text shown via CSS group-hover */}
+            <Link to="/" className="flex items-center gap-2 px-2 py-2 mb-4 min-w-0">
+              <Logo size={20} showText={false} className="flex-shrink-0" />
+              <span className="text-[13px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-text-primary">
+                FacePulse
+              </span>
+            </Link>
 
             {/* Nav links */}
             {navLinks.map((link) => (
@@ -105,9 +107,9 @@ export function AppLayout() {
               className="flex items-center gap-2.5 px-2 py-2 rounded-[6px] text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors duration-150 w-full cursor-pointer"
             >
               <Settings className="w-5 h-5 flex-shrink-0" />
-              {sidebarOpen && (
-                <span className="text-[13px] font-medium whitespace-pre text-left">Settings</span>
-              )}
+              <span className="text-[13px] font-medium whitespace-nowrap text-left opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                Settings
+              </span>
             </button>
 
             <button
@@ -115,9 +117,9 @@ export function AppLayout() {
               className="flex items-center gap-2.5 px-2 py-2 rounded-[6px] text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors duration-150 w-full cursor-pointer"
             >
               <LogOut className="w-5 h-5 flex-shrink-0" />
-              {sidebarOpen && (
-                <span className="text-[13px] font-medium whitespace-pre text-left">Sign Out</span>
-              )}
+              <span className="text-[13px] font-medium whitespace-nowrap text-left opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                Sign Out
+              </span>
             </button>
 
             {/* User avatar */}
@@ -125,11 +127,9 @@ export function AppLayout() {
               <div className="w-7 h-7 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center flex-shrink-0">
                 <span className="text-[11px] font-semibold text-accent">{avatarLetter}</span>
               </div>
-              {sidebarOpen && (
-                <span className="text-[12px] text-text-muted truncate max-w-[160px]">
-                  {user?.email ?? 'Guest'}
-                </span>
-              )}
+              <span className="text-[12px] text-text-muted truncate max-w-[160px] opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                {user?.email ?? 'Guest'}
+              </span>
             </div>
           </div>
         </SidebarBody>

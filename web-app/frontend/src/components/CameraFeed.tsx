@@ -77,7 +77,7 @@ export function CameraFeed({
     }
 
     // Face bounding box
-    if (settings.showBoundingBox && latestResult && faceDetected) {
+    if (settings.showBoundingBox && isDetecting && latestResult && faceDetected) {
       const box = latestResult.faceBox
       const scaleX = video.videoWidth > 0 ? canvas.width / video.videoWidth : 1
       const scaleY = video.videoHeight > 0 ? canvas.height / video.videoHeight : 1
