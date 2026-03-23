@@ -77,7 +77,7 @@ export function HomePage() {
           </Link>
           <Link
             to="/about"
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-[14px] font-medium rounded-[8px] bg-transparent border border-border-default text-text-primary hover:bg-white/5 transition-colors duration-150"
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-[14px] font-medium rounded-[8px] bg-transparent border border-border-default text-text-primary hover:bg-hover-overlay transition-colors duration-150"
           >
             How it works
           </Link>

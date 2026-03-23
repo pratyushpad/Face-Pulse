@@ -54,24 +54,7 @@ export const EMOTION_COLORS: Record<EmotionKey, string> = {
   surprised: '#fbbf24', // amber-400
 }
 
-// Design tokens
-export const COLOR = {
-  base: '#0a0a0a',
-  surface: '#111111',
-  elevated: '#1a1a1a',
-  borderSubtle: 'rgba(255,255,255,0.07)',
-  borderDefault: 'rgba(255,255,255,0.12)',
-  textPrimary: '#f5f5f5',
-  textSecondary: '#a3a3a3',
-  textMuted: '#525252',
-  accent: '#60a5fa',
-  accentHover: '#3b82f6',
-  danger: '#ef4444',
-  success: '#22c55e',
-} as const
-
-// Chart.js theme
-export const CHART_GRID = 'rgba(255,255,255,0.05)'
-export const CHART_TICK = '#525252'
-export const CHART_TOOLTIP_BG = '#1a1a1a'
-export const CHART_TOOLTIP_BORDER = 'rgba(255,255,255,0.1)'
+// Read a CSS variable from the current theme at call time
+export function getCssVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+}

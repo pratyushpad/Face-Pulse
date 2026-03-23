@@ -70,7 +70,7 @@ export function SettingsPanel({
           <h2 className="text-base font-semibold">Settings</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded bg-transparent border-none text-text-secondary cursor-pointer transition-colors duration-150 hover:text-text-primary hover:bg-white/5"
+            className="p-1 rounded bg-transparent border-none text-text-secondary cursor-pointer transition-colors duration-150 hover:text-text-primary hover:bg-hover-overlay"
             aria-label="Close settings"
           >
             <X className="w-[18px] h-[18px]" />
@@ -148,17 +148,6 @@ export function SettingsPanel({
               />
             </div>
 
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-[13px] text-text-primary">Dark mode</span>
-              <Toggle
-                checked={settings.darkMode}
-                onChange={(v) => {
-                  onUpdate({ darkMode: v })
-                  document.documentElement.classList.toggle('dark', v)
-                  document.documentElement.classList.toggle('light', !v)
-                }}
-              />
-            </div>
           </div>
 
           {/* Camera selector */}

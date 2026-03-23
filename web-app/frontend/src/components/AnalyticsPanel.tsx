@@ -5,12 +5,9 @@ import {
   ALL_EMOTIONS,
   EMOTION_LABELS,
   EMOTION_COLORS,
-  CHART_GRID,
-  CHART_TICK,
-  CHART_TOOLTIP_BG,
-  CHART_TOOLTIP_BORDER,
-  COLOR,
+  getCssVar,
 } from '@/constants'
+import { useSettings } from '@/contexts/SettingsContext'
 import type { TimelinePoint } from '@/types'
 
 interface AnalyticsPanelProps {
@@ -42,6 +39,8 @@ export function AnalyticsPanel({
   timelineData,
   isDetecting,
 }: AnalyticsPanelProps) {
+  const { settings } = useSettings()
+
   // Tick every second while detecting so the timer counts up live
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -89,10 +88,10 @@ export function AnalyticsPanel({
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: CHART_TOOLTIP_BG,
-          titleColor: COLOR.textPrimary,
-          bodyColor: COLOR.textSecondary,
-          borderColor: CHART_TOOLTIP_BORDER,
+          backgroundColor: getCssVar('--color-chart-tooltip-bg'),
+          titleColor: getCssVar('--color-text-primary'),
+          bodyColor: getCssVar('--color-text-secondary'),
+          borderColor: getCssVar('--color-chart-tooltip-border'),
           borderWidth: 1,
           titleFont: { family: 'Inter' },
           bodyFont: { family: '"JetBrains Mono"', size: 11 },
@@ -101,15 +100,15 @@ export function AnalyticsPanel({
       },
       scales: {
         x: {
-          grid: { color: CHART_GRID },
-          ticks: { color: CHART_TICK, font: { family: '"JetBrains Mono"', size: 10 }, maxTicksLimit: 6 },
+          grid: { color: getCssVar('--color-chart-grid') },
+          ticks: { color: getCssVar('--color-chart-tick'), font: { family: '"JetBrains Mono"', size: 10 }, maxTicksLimit: 6 },
         },
         y: {
           min: 0,
           max: 1,
-          grid: { color: CHART_GRID },
+          grid: { color: getCssVar('--color-chart-grid') },
           ticks: {
-            color: CHART_TICK,
+            color: getCssVar('--color-chart-tick'),
             font: { family: '"JetBrains Mono"', size: 10 },
             callback: (v) => `${Math.round(Number(v) * 100)}%`,
             stepSize: 0.25,
@@ -117,7 +116,8 @@ export function AnalyticsPanel({
         },
       },
     }),
-    []
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [settings.darkMode]
   )
 
   const donutData: ChartData<'doughnut'> = useMemo(() => {
@@ -128,7 +128,7 @@ export function AnalyticsPanel({
         {
           data: counts,
           backgroundColor: ALL_EMOTIONS.map((e) => EMOTION_COLORS[e]),
-          borderColor: 'rgba(255,255,255,0.03)',
+          borderColor: getCssVar('--color-border-subtle'),
           borderWidth: 1,
           hoverOffset: 4,
         },
@@ -146,7 +146,7 @@ export function AnalyticsPanel({
         legend: {
           position: 'right' as const,
           labels: {
-            color: COLOR.textSecondary,
+            color: getCssVar('--color-text-secondary'),
             font: { family: 'Inter', size: 11 },
             boxWidth: 10,
             boxHeight: 10,
@@ -154,17 +154,18 @@ export function AnalyticsPanel({
           },
         },
         tooltip: {
-          backgroundColor: CHART_TOOLTIP_BG,
-          titleColor: COLOR.textPrimary,
-          bodyColor: COLOR.textSecondary,
-          borderColor: CHART_TOOLTIP_BORDER,
+          backgroundColor: getCssVar('--color-chart-tooltip-bg'),
+          titleColor: getCssVar('--color-text-primary'),
+          bodyColor: getCssVar('--color-text-secondary'),
+          borderColor: getCssVar('--color-chart-tooltip-border'),
           borderWidth: 1,
           bodyFont: { family: '"JetBrains Mono"', size: 11 },
           padding: 10,
         },
       },
     }),
-    []
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [settings.darkMode]
   )
 
   const maxCount = Math.max(...Object.values(emotionCounts), 1)

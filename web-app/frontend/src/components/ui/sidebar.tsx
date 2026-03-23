@@ -139,8 +139,8 @@ export const SidebarLinkItem = ({
       className={cn(
         'flex items-center gap-2.5 px-2 py-2 rounded-[6px] transition-colors duration-150 relative',
         isActive
-          ? 'bg-white/5 text-text-primary'
-          : 'text-text-secondary hover:text-text-primary hover:bg-white/5',
+          ? 'bg-hover-overlay text-text-primary'
+          : 'text-text-secondary hover:text-text-primary hover:bg-hover-overlay',
         className
       )}
     >

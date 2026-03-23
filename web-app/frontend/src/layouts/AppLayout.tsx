@@ -110,7 +110,7 @@ export function AppLayout() {
           <div className="flex flex-col gap-1 border-t border-border-subtle pt-3">
             <button
               onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-2.5 px-2 py-2 rounded-[6px] text-text-secondary hover:text-text-primary hover:bg-white/5 transition-colors duration-150 w-full cursor-pointer"
+              className="flex items-center gap-2.5 px-2 py-2 rounded-[6px] text-text-secondary hover:text-text-primary hover:bg-hover-overlay transition-colors duration-150 w-full cursor-pointer"
             >
               <Settings className="w-5 h-5 flex-shrink-0" />
               <span className="text-[13px] font-medium whitespace-nowrap text-left opacity-0 group-hover:opacity-100 transition-opacity duration-150">
@@ -133,7 +133,7 @@ export function AppLayout() {
           )}
           <button
             onClick={() => setSettingsOpen(true)}
-            className="p-1.5 rounded-[6px] text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors duration-150 cursor-pointer"
+            className="p-1.5 rounded-[6px] text-text-muted hover:text-text-primary hover:bg-hover-overlay transition-colors duration-150 cursor-pointer"
             aria-label="Open settings"
           >
             <Settings className="w-4 h-4" />

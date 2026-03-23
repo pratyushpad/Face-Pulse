@@ -145,7 +145,7 @@ export function HistoryPage() {
             <button
               onClick={() => exportCSV(historyLog)}
               disabled={historyLog.length === 0}
-              className="inline-flex items-center gap-1.5 px-[10px] py-[6px] text-[12px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-transparent border border-border-default text-text-primary hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1.5 px-[10px] py-[6px] text-[12px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-transparent border border-border-default text-text-primary hover:bg-hover-overlay disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Download className="w-3 h-3" />
               CSV
@@ -153,7 +153,7 @@ export function HistoryPage() {
             <button
               onClick={() => exportJSON(historyLog)}
               disabled={historyLog.length === 0}
-              className="inline-flex items-center gap-1.5 px-[10px] py-[6px] text-[12px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-transparent border border-border-default text-text-primary hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1.5 px-[10px] py-[6px] text-[12px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-transparent border border-border-default text-text-primary hover:bg-hover-overlay disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Download className="w-3 h-3" />
               JSON

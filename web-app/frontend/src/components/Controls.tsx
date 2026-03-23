@@ -41,7 +41,7 @@ export function Controls({
         ) : (
           <button
             onClick={onStop}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-transparent border border-border-default text-text-primary hover:bg-white/5"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-transparent border border-border-default text-text-primary hover:bg-hover-overlay"
           >
             <Square className="w-[14px] h-[14px]" />
             Stop
@@ -52,7 +52,7 @@ export function Controls({
           <button
             onClick={onSwitch}
             disabled={!isStreamActive}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-transparent border border-border-default text-text-primary hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-[6px] cursor-pointer transition-colors duration-150 bg-transparent border border-border-default text-text-primary hover:bg-hover-overlay disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <RefreshCw className="w-[14px] h-[14px]" />
             Switch

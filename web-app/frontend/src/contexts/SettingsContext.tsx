@@ -27,6 +27,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setSettings((prev) => ({ ...prev, ...partial }))
   }, [])
 
+  // Sync dark/light class on mount and whenever darkMode changes
+  useEffect(() => {
+    document.documentElement.classList.toggle('light', !settings.darkMode)
+  }, [settings.darkMode])
+
   // Close settings on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
