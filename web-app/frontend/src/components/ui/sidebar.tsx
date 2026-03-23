@@ -100,8 +100,8 @@ export const MobileSidebar = ({
           <motion.div
             initial={{ x: '-100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '-100%', opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            exit={{ opacity: 0, transition: { duration: 0 } }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             className={cn(
               'fixed inset-0 bg-base z-[200] flex flex-col p-6',
               className
