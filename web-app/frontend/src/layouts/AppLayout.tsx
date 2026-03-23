@@ -153,10 +153,10 @@ export function AppLayout() {
 }
 
 function SidebarSettingsButton({ onOpen }: { onOpen: () => void }) {
-  const { open } = useSidebar()
+  const { open, setOpen } = useSidebar()
   return (
     <button
-      onClick={onOpen}
+      onClick={() => { setOpen(false); onOpen() }}
       className="flex items-center gap-2.5 px-2 py-2 rounded-[6px] text-text-secondary hover:text-text-primary hover:bg-hover-overlay transition-colors duration-150 w-full cursor-pointer"
     >
       <Settings className="w-5 h-5 flex-shrink-0" />
