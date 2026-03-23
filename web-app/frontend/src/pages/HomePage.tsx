@@ -77,12 +77,7 @@ export function HomePage() {
       </nav>
 
       {/* Hero — left-aligned */}
-      <section className="relative z-10 px-8 pt-20 pb-28 max-w-[1200px] mx-auto">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border-default text-[12px] text-text-muted mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-success" />
-          All processing runs locally in your browser
-        </div>
-
+      <section className="relative z-10 px-8 pt-16 pb-24 max-w-[1200px] mx-auto">
         <h1 className="text-[52px] font-semibold leading-[1.1] tracking-[-0.03em] text-text-primary max-[768px]:text-[34px] max-w-[640px]">
           Real-time emotion detection from your webcam
         </h1>
@@ -116,7 +111,7 @@ export function HomePage() {
             <Link
               key={f.href}
               to={user ? f.href : '/login?mode=signup'}
-              className="group flex flex-col gap-4 p-6 bg-surface border border-border-subtle rounded-[10px] hover:border-border-default transition-colors duration-200"
+              className="group flex flex-col gap-4 p-6 bg-surface border border-border-subtle rounded-[10px] hover:border-border-default hover:shadow-[0_0_24px_rgba(96,165,250,0.07)] transition-all duration-200"
             >
               <div className="w-8 h-8 rounded-[7px] bg-accent/10 border border-accent/20 flex items-center justify-center">
                 <f.icon className="w-4 h-4 text-accent" />

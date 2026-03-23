@@ -38,14 +38,13 @@ export function LoginPage() {
     setLoading(false)
 
     if (err) {
-      // Give a friendlier message for network failures (unconfigured Supabase)
       if (err.toLowerCase().includes('fetch') || err.toLowerCase().includes('network')) {
         setError('Network error — Supabase credentials may not be configured. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in web-app/frontend/.env')
       } else {
         setError(err)
       }
     } else if (mode === 'signup') {
-      setMessage('Account created. Check your email to verify, then log in.')
+      setMessage('Account created. Check your email to verify, then sign in.')
       setMode('login')
     }
   }
@@ -63,94 +62,121 @@ export function LoginPage() {
         </Suspense>
       </div>
 
+      {/* Radial depth behind card */}
+      <div className="absolute inset-0 z-[1] bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(30,58,95,0.35)_0%,transparent_70%)] pointer-events-none" />
+
       {/* Card */}
       <div className="relative z-10 w-full max-w-[380px] mx-4">
-        {/* Logo */}
-        <div className="mb-8">
+        {/* Logo above card */}
+        <div className="flex justify-center mb-7">
           <Logo size={26} showText />
         </div>
 
-        <div className="bg-surface/80 backdrop-blur-md border border-border-subtle rounded-[12px] p-7">
-          <h1 className="text-xl font-semibold mb-1">
-            {mode === 'login' ? 'Welcome back' : 'Create account'}
-          </h1>
-          <p className="text-[13px] text-text-muted mb-6">
-            {mode === 'login'
-              ? 'Sign in to access your emotion analytics'
-              : 'Start tracking your emotion sessions'}
-          </p>
+        {/* Glass card wrapper with glow halo */}
+        <div className="relative">
+          {/* Blue glow halo */}
+          <div className="absolute -inset-[2px] rounded-[20px] bg-accent/15 blur-2xl opacity-70 pointer-events-none" />
 
-          {error && (
-            <div className="mb-4 px-4 py-2.5 rounded-[6px] bg-danger/10 border border-danger/30 text-danger text-[13px] font-mono">
-              {error}
-            </div>
-          )}
-          {message && (
-            <div className="mb-4 px-4 py-2.5 rounded-[6px] bg-success/10 border border-success/30 text-success text-[13px]">
-              {message}
-            </div>
-          )}
+          {/* Glass panel */}
+          <div className="relative bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-[18px] p-8
+                          shadow-[0_8px_40px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.09)]">
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                placeholder="you@example.com"
-                className="px-3 py-2.5 text-[13px] bg-elevated border border-border-default rounded-[6px] text-text-primary placeholder:text-text-muted outline-none focus:border-accent transition-colors duration-150"
-              />
-            </div>
+            {/* Shine edge — top inset highlight */}
+            <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full pointer-events-none" />
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-medium uppercase tracking-[0.08em] text-text-muted">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                  placeholder="••••••••"
-                  className="w-full px-3 py-2.5 pr-10 text-[13px] bg-elevated border border-border-default rounded-[6px] text-text-primary placeholder:text-text-muted outline-none focus:border-accent transition-colors duration-150"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+            <h1 className="text-[20px] font-semibold mb-1 text-text-primary">
+              {mode === 'login' ? 'Welcome back' : 'Create account'}
+            </h1>
+            <p className="text-[13px] text-text-muted mb-7">
+              {mode === 'login'
+                ? 'Sign in to access your emotion analytics'
+                : 'Start tracking your emotion sessions'}
+            </p>
+
+            {error && (
+              <div className="mb-5 px-4 py-3 rounded-[8px] bg-danger/10 border border-danger/25 text-danger text-[12.5px] leading-[1.5]">
+                {error}
               </div>
+            )}
+            {message && (
+              <div className="mb-5 px-4 py-3 rounded-[8px] bg-success/10 border border-success/25 text-success text-[12.5px] leading-[1.5]">
+                {message}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  className="px-3 py-2.5 text-[13px] bg-white/[0.06] border border-white/10 rounded-[8px]
+                             text-text-primary placeholder:text-text-muted/50 outline-none
+                             focus:border-accent/50 focus:bg-white/[0.09] transition-all duration-150"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-medium uppercase tracking-[0.1em] text-text-muted">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    placeholder="••••••••"
+                    className="w-full px-3 py-2.5 pr-10 text-[13px] bg-white/[0.06] border border-white/10 rounded-[8px]
+                               text-text-primary placeholder:text-text-muted/50 outline-none
+                               focus:border-accent/50 focus:bg-white/[0.09] transition-all duration-150"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-1 px-4 py-2.5 text-[13px] font-medium bg-accent text-black rounded-[8px]
+                           hover:bg-accent-hover transition-all duration-150 cursor-pointer
+                           disabled:opacity-50 disabled:cursor-not-allowed
+                           shadow-[0_0_20px_rgba(96,165,250,0.25)]
+                           hover:shadow-[0_0_32px_rgba(96,165,250,0.45)]"
+              >
+                {loading ? 'Please wait…' : mode === 'login' ? 'Sign In' : 'Create Account'}
+              </button>
+            </form>
+
+            <div className="mt-6 pt-5 border-t border-white/[0.07] text-center">
+              <span className="text-[13px] text-text-muted">
+                {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
+              </span>
+              <button
+                onClick={() => {
+                  setMode(mode === 'login' ? 'signup' : 'login')
+                  setError(null)
+                  setMessage(null)
+                }}
+                className="text-[13px] text-accent hover:text-accent-hover transition-colors cursor-pointer"
+              >
+                {mode === 'login' ? 'Sign up' : 'Sign in'}
+              </button>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-2 px-4 py-2.5 text-[13px] font-medium bg-accent border border-accent text-black rounded-[6px] hover:bg-accent-hover hover:border-accent-hover transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
-            </button>
-          </form>
-
-          <div className="mt-5 pt-5 border-t border-border-subtle text-center">
-            <span className="text-[13px] text-text-muted">
-              {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-            </span>
-            <button
-              onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); setMessage(null) }}
-              className="text-[13px] text-accent hover:text-accent-hover transition-colors cursor-pointer"
-            >
-              {mode === 'login' ? 'Sign up' : 'Sign in'}
-            </button>
           </div>
         </div>
 
