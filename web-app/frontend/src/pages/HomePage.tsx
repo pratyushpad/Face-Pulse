@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { Camera, Activity, Clock, ArrowRight, Shield } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
 import { Logo } from '@/components/Logo'
 
 const MeshGradient = lazy(() =>
@@ -30,8 +29,6 @@ const features = [
 ]
 
 export function HomePage() {
-  const { user } = useAuth()
-
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Shader background */}
@@ -50,34 +47,23 @@ export function HomePage() {
       <nav className="relative z-10 flex items-center justify-between px-8 py-5 max-w-[1200px] mx-auto">
         <Logo size={22} showText />
         <div className="flex items-center gap-3">
-          {user ? (
-            <Link
-              to="/detect"
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-[6px] bg-accent border border-accent text-black hover:bg-accent-hover transition-colors duration-150"
-            >
-              Open App
-            </Link>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="text-[13px] text-text-secondary hover:text-text-primary transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/login?mode=signup"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-[6px] bg-accent border border-accent text-black hover:bg-accent-hover transition-colors duration-150"
-              >
-                Get Started
-              </Link>
-            </>
-          )}
+          <Link
+            to="/login"
+            className="text-[13px] text-text-secondary hover:text-text-primary transition-colors"
+          >
+            Sign In
+          </Link>
+          <Link
+            to="/login?mode=signup"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-[6px] bg-accent border border-accent text-black hover:bg-accent-hover transition-colors duration-150"
+          >
+            Get Started
+          </Link>
         </div>
       </nav>
 
       {/* Hero — left-aligned */}
-      <section className="relative z-10 px-8 max-w-[1200px] mx-auto min-h-[calc(100vh-80px)] flex flex-col justify-center">
+      <section className="relative z-10 px-8 pt-24 pb-32 max-w-[1200px] mx-auto">
         <h1 className="text-[52px] font-semibold leading-[1.1] tracking-[-0.03em] text-text-primary max-[768px]:text-[34px] max-w-[640px]">
           Real-time emotion detection from your webcam
         </h1>
@@ -89,7 +75,7 @@ export function HomePage() {
 
         <div className="flex items-center gap-3 mt-9 flex-wrap">
           <Link
-            to={user ? '/detect' : '/login?mode=signup'}
+            to="/login?mode=signup"
             className="inline-flex items-center gap-2 px-5 py-2.5 text-[14px] font-medium rounded-[8px] bg-accent border border-accent text-black hover:bg-accent-hover transition-colors duration-150"
           >
             Start detecting
@@ -110,7 +96,7 @@ export function HomePage() {
           {features.map((f) => (
             <Link
               key={f.href}
-              to={user ? f.href : '/login?mode=signup'}
+              to="/login?mode=signup"
               className="group flex flex-col gap-4 p-6 bg-surface border border-border-subtle rounded-[10px] hover:border-border-default hover:shadow-[0_0_24px_rgba(96,165,250,0.07)] transition-all duration-200"
             >
               <div className="w-8 h-8 rounded-[7px] bg-accent/10 border border-accent/20 flex items-center justify-center">

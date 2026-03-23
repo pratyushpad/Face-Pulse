@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { Camera, Activity, Clock, Info, Settings, LogOut, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
+import { Camera, Activity, Clock, Info, Settings, LogOut } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { Sidebar, SidebarBody, SidebarLinkItem } from '@/components/ui/sidebar'
 import { SettingsPanel } from '@/components/SettingsPanel'
@@ -84,19 +84,9 @@ export function AppLayout() {
         <SidebarBody className="h-full">
           {/* Top: Logo + Nav */}
           <div className="flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
-            {/* Logo + Toggle */}
-            <div className="flex items-center justify-between px-2 py-2 mb-4">
+            {/* Logo */}
+            <div className="px-2 py-2 mb-4">
               <Logo size={20} showText={sidebarOpen} />
-              <button
-                onClick={() => setSidebarOpen((v) => !v)}
-                className="p-1 rounded-[5px] text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors cursor-pointer"
-                aria-label="Toggle sidebar"
-              >
-                {sidebarOpen
-                  ? <PanelLeftClose className="w-4 h-4" />
-                  : <PanelLeftOpen className="w-4 h-4" />
-                }
-              </button>
             </div>
 
             {/* Nav links */}

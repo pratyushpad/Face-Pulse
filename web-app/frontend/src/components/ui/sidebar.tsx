@@ -75,7 +75,7 @@ export const DesktopSidebar = ({
   children,
   ...props
 }: React.ComponentProps<typeof motion.div>) => {
-  const { open, animate } = useSidebar()
+  const { open, setOpen, animate } = useSidebar()
   return (
     <motion.div
       className={cn(
@@ -86,6 +86,8 @@ export const DesktopSidebar = ({
         width: animate ? (open ? '240px' : '56px') : '240px',
       }}
       transition={{ duration: 0.2, ease: 'easeInOut' }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
       {...props}
     >
       {children}
@@ -148,7 +150,7 @@ export const SidebarLinkItem = ({
   link: SidebarLink
   className?: string
 }) => {
-  const { open, setOpen, animate } = useSidebar()
+  const { open, animate } = useSidebar()
   const location = useLocation()
   const isActive = location.pathname === link.href
 
@@ -156,7 +158,6 @@ export const SidebarLinkItem = ({
     <Link
       to={link.href}
       title={!open ? link.label : undefined}
-      onClick={() => setOpen(false)}
       className={cn(
         'flex items-center gap-2.5 px-2 py-2 rounded-[6px] group/sidebar transition-colors duration-150 relative',
         isActive
