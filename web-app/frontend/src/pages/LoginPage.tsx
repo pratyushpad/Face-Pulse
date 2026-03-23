@@ -1,14 +1,17 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { Monitor, Eye, EyeOff } from 'lucide-react'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { Logo } from '@/components/Logo'
 
 const MeshGradient = lazy(() =>
   import('@paper-design/shaders-react').then((m) => ({ default: m.MeshGradient }))
 )
 
 export function LoginPage() {
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
+  const [searchParams] = useSearchParams()
+  const initialMode = searchParams.get('mode') === 'signup' ? 'signup' : 'login'
+  const [mode, setMode] = useState<'login' | 'signup'>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -35,7 +38,12 @@ export function LoginPage() {
     setLoading(false)
 
     if (err) {
-      setError(err)
+      // Give a friendlier message for network failures (unconfigured Supabase)
+      if (err.toLowerCase().includes('fetch') || err.toLowerCase().includes('network')) {
+        setError('Network error — Supabase credentials may not be configured. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in web-app/frontend/.env')
+      } else {
+        setError(err)
+      }
     } else if (mode === 'signup') {
       setMessage('Account created. Check your email to verify, then log in.')
       setMode('login')
@@ -58,9 +66,8 @@ export function LoginPage() {
       {/* Card */}
       <div className="relative z-10 w-full max-w-[380px] mx-4">
         {/* Logo */}
-        <div className="flex items-center gap-2.5 mb-8">
-          <Monitor className="w-6 h-6 text-accent" />
-          <span className="text-xl font-semibold text-text-primary">EmoVision</span>
+        <div className="mb-8">
+          <Logo size={26} showText />
         </div>
 
         <div className="bg-surface/80 backdrop-blur-md border border-border-subtle rounded-[12px] p-7">

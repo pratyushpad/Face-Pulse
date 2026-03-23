@@ -39,9 +39,9 @@ export function AboutPage() {
     <div className="max-w-[760px] mx-auto px-6 pt-8 pb-12">
       {/* Header */}
       <section className="mb-12">
-        <h1 className="text-2xl font-semibold mb-3">About EmoVision</h1>
+        <h1 className="text-2xl font-semibold mb-3">About FacePulse</h1>
         <p className="text-[15px] text-text-secondary leading-[1.7]">
-          EmoVision is a real-time facial emotion analysis tool that runs entirely in your browser.
+          FacePulse is a real-time facial emotion analysis tool that runs entirely in your browser.
           Built using face-api.js and TensorFlow.js, it detects 7 emotions from your camera feed
           with zero data sent to any server.
         </p>

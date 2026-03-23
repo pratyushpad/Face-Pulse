@@ -7,21 +7,18 @@ interface LoadingScreenProps {
 export function LoadingScreen({ progress, message, error }: LoadingScreenProps) {
   return (
     <div className="fixed inset-0 bg-base flex flex-col items-center justify-center z-[200]">
-      <div className="flex items-center gap-2 mb-12 text-xl font-semibold">
-        <svg
-          className="w-6 h-6 text-accent"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="2" y="3" width="20" height="14" rx="2" />
-          <line x1="8" y1="21" x2="16" y2="21" />
-          <line x1="12" y1="17" x2="12" y2="21" />
+      <div className="flex items-center gap-2.5 mb-12">
+        {/* FacePulse scan logo */}
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-accent" aria-hidden="true">
+          <path d="M2 6 L2 2 L6 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M18 2 L22 2 L22 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M2 18 L2 22 L6 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M18 22 L22 22 L22 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="9" cy="10" r="1.2" fill="currentColor" />
+          <circle cx="15" cy="10" r="1.2" fill="currentColor" />
+          <path d="M9.5 14.5 Q12 16.5 14.5 14.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />
         </svg>
-        EmoVision
+        <span className="text-xl font-semibold text-text-primary">FacePulse</span>
       </div>
 
       <p className="font-mono text-[13px] text-text-secondary mb-4">

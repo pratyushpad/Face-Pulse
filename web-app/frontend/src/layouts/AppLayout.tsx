@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { Camera, Activity, Clock, Info, Settings, LogOut, Monitor } from 'lucide-react'
+import { Camera, Activity, Clock, Info, Settings, LogOut } from 'lucide-react'
+import { Logo } from '@/components/Logo'
 import { Sidebar, SidebarBody, SidebarLinkItem } from '@/components/ui/sidebar'
 import { SettingsPanel } from '@/components/SettingsPanel'
 import { Footer } from '@/components/Footer'
@@ -84,13 +85,8 @@ export function AppLayout() {
           {/* Top: Logo + Nav */}
           <div className="flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
             {/* Logo */}
-            <div className="flex items-center gap-2.5 px-2 py-2 mb-4">
-              <Monitor className="w-5 h-5 flex-shrink-0 text-accent" />
-              {sidebarOpen && (
-                <span className="text-[15px] font-semibold text-text-primary whitespace-pre">
-                  EmoVision
-                </span>
-              )}
+            <div className="px-2 py-2 mb-4">
+              <Logo size={20} showText={sidebarOpen} />
             </div>
 
             {/* Nav links */}

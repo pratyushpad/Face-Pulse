@@ -106,7 +106,7 @@ export const MobileSidebar = ({
         className="h-12 px-4 flex md:hidden items-center justify-between bg-surface border-b border-border-subtle w-full"
         {...props}
       >
-        <span className="text-[15px] font-semibold text-text-primary">EmoVision</span>
+        <span className="text-[15px] font-semibold text-text-primary">FacePulse</span>
         <button
           className="text-text-muted hover:text-text-primary transition-colors cursor-pointer"
           onClick={() => setOpen(!open)}

@@ -1,19 +1,26 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+const rawUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
+const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-if (!supabaseUrl || !supabaseAnonKey) {
+// Only use env values if they look like real credentials
+const isValidUrl = (s?: string) => {
+  try { return s ? new URL(s).protocol.startsWith('http') : false } catch { return false }
+}
+
+const supabaseUrl = isValidUrl(rawUrl) ? rawUrl! : 'https://placeholder.supabase.co'
+const supabaseAnonKey = (rawKey && rawKey !== 'your_supabase_anon_key') ? rawKey : 'placeholder-anon-key'
+
+export const supabaseConfigured = isValidUrl(rawUrl) && rawKey !== 'your_supabase_anon_key'
+
+if (!supabaseConfigured) {
   console.warn(
-    'Supabase env vars missing. Auth and data persistence will not work. ' +
-    'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file.'
+    '[FacePulse] Supabase not configured — auth and data persistence disabled. ' +
+    'Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to web-app/frontend/.env'
   )
 }
 
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder'
-)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export type Database = {
   public: {

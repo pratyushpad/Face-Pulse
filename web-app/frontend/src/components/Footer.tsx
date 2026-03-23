@@ -10,7 +10,7 @@ export function Footer() {
             Powered by face-api.js &middot; TensorFlow.js
           </span>
           <span className="text-[12px] text-text-muted">
-            &copy; {new Date().getFullYear()} EmoVision &middot; Built by Pratyush Padhy
+            &copy; {new Date().getFullYear()} FacePulse &middot; Built by Pratyush Padhy
           </span>
         </div>
 

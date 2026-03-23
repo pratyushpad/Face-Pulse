@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabaseConfigured } from '@/lib/supabase'
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -14,6 +15,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </div>
     )
   }
+
+  // If Supabase isn't configured, allow access (guest mode)
+  if (!supabaseConfigured) return <>{children}</>
 
   if (!user) {
     return <Navigate to="/login" replace />
