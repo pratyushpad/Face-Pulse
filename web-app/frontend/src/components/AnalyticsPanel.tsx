@@ -9,8 +9,8 @@ import {
   CHART_TOOLTIP_BG,
   CHART_TOOLTIP_BORDER,
   COLOR,
-} from '../constants'
-import type { TimelinePoint } from '../types'
+} from '@/constants'
+import type { TimelinePoint } from '@/types'
 
 interface AnalyticsPanelProps {
   sessionStart: number | null

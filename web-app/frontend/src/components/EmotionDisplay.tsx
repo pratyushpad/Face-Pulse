@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ALL_EMOTIONS, EMOTION_LABELS } from '../constants'
-import type { DetectionResult } from '../types'
+import { ALL_EMOTIONS, EMOTION_LABELS } from '@/constants'
+import type { DetectionResult } from '@/types'
 
 interface EmotionDisplayProps {
   result: DetectionResult | null

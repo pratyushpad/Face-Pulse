@@ -5,6 +5,7 @@ export function useCamera() {
   const streamRef = useRef<MediaStream | null>(null)
 
   const [isStreamActive, setIsStreamActive] = useState(false)
+  const [stream, setStream] = useState<MediaStream | null>(null)
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
   const [selectedCameraId, setSelectedCameraId] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
@@ -36,6 +37,7 @@ export function useCamera() {
     if (videoRef.current) {
       videoRef.current.srcObject = null
     }
+    setStream(null)
     setIsStreamActive(false)
   }, [])
 
@@ -51,14 +53,15 @@ export function useCamera() {
         audio: false,
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      streamRef.current = stream
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints)
+      streamRef.current = mediaStream
 
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
+        videoRef.current.srcObject = mediaStream
         await videoRef.current.play()
       }
 
+      setStream(mediaStream)
       setIsStreamActive(true)
       await listCameras()
     } catch (err) {
@@ -92,6 +95,7 @@ export function useCamera() {
 
   return {
     videoRef,
+    stream,
     isStreamActive,
     cameras,
     selectedCameraId,

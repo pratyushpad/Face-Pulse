@@ -1,8 +1,8 @@
 import { useRef, useEffect, useCallback } from 'react'
-import type { DetectionResult, AppSettings } from '../types'
+import type { DetectionResult, AppSettings } from '@/types'
+import { useCamera2 } from '@/contexts/CameraContext'
 
 interface CameraFeedProps {
-  videoRef: React.RefObject<HTMLVideoElement>
   latestResult: DetectionResult | null
   faceDetected: boolean
   isDetecting: boolean
@@ -12,7 +12,6 @@ interface CameraFeedProps {
 }
 
 export function CameraFeed({
-  videoRef,
   latestResult,
   faceDetected,
   isDetecting,
@@ -20,11 +19,25 @@ export function CameraFeed({
   latency,
   settings,
 }: CameraFeedProps) {
+  const { stream } = useCamera2()
+  const localVideoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animRef = useRef<number | null>(null)
 
+  // Sync the shared MediaStream to this visible video element
+  useEffect(() => {
+    const video = localVideoRef.current
+    if (!video) return
+    if (stream) {
+      video.srcObject = stream
+      video.play().catch(() => {})
+    } else {
+      video.srcObject = null
+    }
+  }, [stream])
+
   const draw = useCallback(() => {
-    const video = videoRef.current
+    const video = localVideoRef.current
     const canvas = canvasRef.current
     if (!video || !canvas) {
       animRef.current = requestAnimationFrame(draw)
@@ -74,13 +87,11 @@ export function CameraFeed({
       const bw = box.width * scaleX
       const bh = box.height * scaleY
 
-      // Thin white rectangle, no rounded corners
       ctx.save()
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'
       ctx.lineWidth = 1.5
       ctx.strokeRect(bx, by, bw, bh)
 
-      // Emotion label at top-left of box
       const labelText = `${latestResult.emotion} ${Math.round(latestResult.confidence * 100)}%`
       ctx.font = '12px "JetBrains Mono", monospace'
       const tw = ctx.measureText(labelText).width
@@ -92,7 +103,7 @@ export function CameraFeed({
     }
 
     animRef.current = requestAnimationFrame(draw)
-  }, [videoRef, latestResult, faceDetected, isDetecting, fps, latency, settings.showBoundingBox, settings.showHud])
+  }, [latestResult, faceDetected, isDetecting, fps, latency, settings.showBoundingBox, settings.showHud])
 
   useEffect(() => {
     animRef.current = requestAnimationFrame(draw)
@@ -104,7 +115,7 @@ export function CameraFeed({
   return (
     <div className="relative w-full aspect-[4/3] bg-surface border border-border-default rounded-[6px] overflow-hidden">
       <video
-        ref={videoRef}
+        ref={localVideoRef}
         autoPlay
         muted
         playsInline

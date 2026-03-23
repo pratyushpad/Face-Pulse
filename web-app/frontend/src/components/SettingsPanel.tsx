@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import type { AppSettings } from '../types'
+import type { AppSettings } from '@/types'
 
 interface SettingsPanelProps {
   isOpen: boolean

@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -38,6 +39,8 @@ if (!rootElement) throw new Error('Root element #root not found')
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </StrictMode>
 )

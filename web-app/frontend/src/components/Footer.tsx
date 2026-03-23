@@ -1,8 +1,9 @@
 import { Shield } from 'lucide-react'
 
+
 export function Footer() {
   return (
-    <footer className="max-w-content mx-auto px-6 py-8 border-t border-border-subtle mt-12">
+    <footer className="px-6 py-8 border-t border-border-subtle mt-12">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex flex-col gap-1">
           <span className="text-[12px] text-text-muted">

@@ -1,5 +1,6 @@
 import { Play, Square, RefreshCw } from 'lucide-react'
 
+
 interface ControlsProps {
   isDetecting: boolean
   isStreamActive: boolean
