@@ -2,7 +2,7 @@ import { useEffect, lazy, Suspense } from 'react'
 import { Outlet, Link } from 'react-router-dom'
 import { Camera, Activity, Clock, Info, Settings } from 'lucide-react'
 import { Logo } from '@/components/Logo'
-import { Sidebar, SidebarBody, SidebarLinkItem } from '@/components/ui/sidebar'
+import { Sidebar, SidebarBody, SidebarLinkItem, useSidebar } from '@/components/ui/sidebar'
 import { SettingsPanel } from '@/components/SettingsPanel'
 import { Footer } from '@/components/Footer'
 import { LoadingScreen } from '@/components/LoadingScreen'
@@ -108,15 +108,7 @@ export function AppLayout() {
 
           {/* Bottom: Settings */}
           <div className="flex flex-col gap-1 border-t border-border-subtle pt-3">
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-2.5 px-2 py-2 rounded-[6px] text-text-secondary hover:text-text-primary hover:bg-hover-overlay transition-colors duration-150 w-full cursor-pointer"
-            >
-              <Settings className="w-5 h-5 flex-shrink-0" />
-              <span className="text-[13px] font-medium whitespace-nowrap text-left opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                Settings
-              </span>
-            </button>
+            <SidebarSettingsButton onOpen={() => setSettingsOpen(true)} />
           </div>
         </SidebarBody>
       </Sidebar>
@@ -157,5 +149,20 @@ export function AppLayout() {
       />
       </div>{/* end z-10 wrapper */}
     </div>
+  )
+}
+
+function SidebarSettingsButton({ onOpen }: { onOpen: () => void }) {
+  const { open } = useSidebar()
+  return (
+    <button
+      onClick={onOpen}
+      className="flex items-center gap-2.5 px-2 py-2 rounded-[6px] text-text-secondary hover:text-text-primary hover:bg-hover-overlay transition-colors duration-150 w-full cursor-pointer"
+    >
+      <Settings className="w-5 h-5 flex-shrink-0" />
+      <span className={`text-[13px] font-medium whitespace-nowrap text-left transition-opacity duration-150 ${open ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+        Settings
+      </span>
+    </button>
   )
 }

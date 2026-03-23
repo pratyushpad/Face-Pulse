@@ -130,7 +130,7 @@ export const SidebarLinkItem = ({
   className?: string
 }) => {
   const location = useLocation()
-  const { setOpen } = useSidebar()
+  const { open, setOpen } = useSidebar()
   const isActive = location.pathname === link.href
 
   return (
@@ -150,12 +150,12 @@ export const SidebarLinkItem = ({
         {link.icon}
       </span>
 
-      <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-[13px] font-medium whitespace-nowrap flex-1">
+      <span className={cn('transition-opacity duration-150 text-[13px] font-medium whitespace-nowrap flex-1', open ? 'opacity-100' : 'opacity-0 group-hover:opacity-100')}>
         {link.label}
       </span>
 
       {link.badge && (
-        <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+        <span className={cn('ml-auto transition-opacity duration-150', open ? 'opacity-100' : 'opacity-0 group-hover:opacity-100')}>
           {link.badge}
         </span>
       )}
