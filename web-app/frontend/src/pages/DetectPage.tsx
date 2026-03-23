@@ -102,7 +102,6 @@ export function DetectPage() {
           <EmotionDisplay
             result={latestResult}
             faceDetected={faceDetected}
-            isDetecting={isDetecting}
           />
         </div>
 

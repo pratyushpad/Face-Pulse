@@ -1,11 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ALL_EMOTIONS, EMOTION_LABELS } from '@/constants'
+import { ALL_EMOTIONS, EMOTION_LABELS, EMOTION_COLORS } from '@/constants'
 import type { DetectionResult } from '@/types'
 
 interface EmotionDisplayProps {
   result: DetectionResult | null
   faceDetected: boolean
-  isDetecting: boolean
 }
 
 export function EmotionDisplay({ result, faceDetected }: EmotionDisplayProps) {
@@ -61,8 +60,8 @@ export function EmotionDisplay({ result, faceDetected }: EmotionDisplayProps) {
               </span>
               <div className="h-[6px] bg-elevated rounded-[3px] overflow-hidden">
                 <div
-                  className={`h-full rounded-[3px] transition-[width] duration-300 ease-out ${isDominant ? 'bg-accent' : 'bg-text-muted'}`}
-                  style={{ width: `${val * 100}%` }}
+                  className="h-full rounded-[3px] transition-[width] duration-300 ease-out"
+                  style={{ width: `${val * 100}%`, backgroundColor: EMOTION_COLORS[e], opacity: isDominant ? 1 : 0.45 }}
                 />
               </div>
               <span className="font-mono text-[11px] text-text-muted text-right">

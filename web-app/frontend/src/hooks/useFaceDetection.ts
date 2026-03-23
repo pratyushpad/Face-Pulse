@@ -214,19 +214,6 @@ export function useFaceDetection(
         lastFpsTimeRef.current = now
       }
 
-      // Session timeout checks
-      if (sessionStartRef.current) {
-        const elapsed = Date.now() - sessionStartRef.current
-        if (elapsed >= SESSION_MAX_MS) {
-          setSessionWarning('Session ended — 10 minute limit reached. Start a new session to continue.')
-          stopDetection()
-          return
-        } else if (elapsed >= SESSION_WARN_MS && !warnFiredRef.current) {
-          warnFiredRef.current = true
-          setSessionWarning('Halfway through session — auto-pause in 5 minutes.')
-        }
-      }
-
       // Throttled detection
       if (now - lastDetectionRef.current >= DETECTION_INTERVAL_MS) {
         lastDetectionRef.current = now
@@ -274,6 +261,22 @@ export function useFaceDetection(
       setHistoryLog((prev) => [entry, ...prev])
     }
   }, [])
+
+  // Session timeout — checked via interval to avoid stale closure in rAF loop
+  useEffect(() => {
+    if (!isDetecting || !sessionStart) return
+    const id = setInterval(() => {
+      const elapsed = Date.now() - sessionStart
+      if (elapsed >= SESSION_MAX_MS) {
+        setSessionWarning('Session ended — 10 minute limit reached. Start a new session to continue.')
+        stopDetection()
+      } else if (elapsed >= SESSION_WARN_MS && !warnFiredRef.current) {
+        warnFiredRef.current = true
+        setSessionWarning('Halfway through session — auto-pause in 5 minutes.')
+      }
+    }, 1000)
+    return () => clearInterval(id)
+  }, [isDetecting, sessionStart, stopDetection])
 
   const resetSession = useCallback(() => {
     const fresh: Record<string, number> = {}
