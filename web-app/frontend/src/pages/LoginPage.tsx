@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -19,12 +19,10 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const { signIn, signUp, user } = useAuth()
+  const { signIn, signUp, signOut, user } = useAuth()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    if (user) navigate('/detect', { replace: true })
-  }, [user, navigate])
+  // No auto-redirect — let user see the page and choose what to do
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,6 +46,42 @@ export function LoginPage() {
       setMessage('Account created. Check your email to verify, then sign in.')
       setMode('login')
     }
+  }
+
+  // Already signed in — show account panel instead of the form
+  if (user) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <Suspense fallback={<div className="absolute inset-0 bg-base" />}>
+            <MeshGradient className="w-full h-full" colors={['#000000', '#0a0a0a', '#0f172a', '#1e3a5f']} speed={0.3} />
+          </Suspense>
+        </div>
+        <div className="relative z-10 w-full max-w-[380px] mx-4">
+          <div className="flex justify-center mb-7"><Logo size={26} showText /></div>
+          <div className="relative">
+            <div className="absolute -inset-[2px] rounded-[20px] bg-accent/15 blur-2xl opacity-70 pointer-events-none" />
+            <div className="relative bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-[18px] p-8 shadow-[0_8px_40px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.09)]">
+              <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full pointer-events-none" />
+              <p className="text-[13px] text-text-muted mb-1">Signed in as</p>
+              <p className="text-[15px] font-medium text-text-primary mb-6 truncate">{user.email}</p>
+              <button
+                onClick={() => navigate('/detect')}
+                className="w-full px-4 py-2.5 text-[13px] font-medium bg-accent text-black rounded-[8px] hover:bg-accent-hover transition-colors duration-150 mb-3 shadow-[0_0_20px_rgba(96,165,250,0.25)] hover:shadow-[0_0_32px_rgba(96,165,250,0.45)]"
+              >
+                Open App
+              </button>
+              <button
+                onClick={async () => { await signOut(); }}
+                className="w-full px-4 py-2.5 text-[13px] font-medium bg-transparent border border-white/10 text-text-secondary rounded-[8px] hover:text-text-primary hover:bg-white/5 transition-colors duration-150 cursor-pointer"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
