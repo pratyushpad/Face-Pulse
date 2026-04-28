@@ -20,7 +20,7 @@ export function Footer() {
         </div>
 
         <a
-          href="https://github.com/Pratyush-Padhy/emotion-detection-cnn"
+          href="https://github.com/Pratyushpad27/Face-Pulse"
           target="_blank"
           rel="noopener noreferrer"
           className="text-text-muted transition-colors duration-150 hover:text-text-primary cursor-pointer"

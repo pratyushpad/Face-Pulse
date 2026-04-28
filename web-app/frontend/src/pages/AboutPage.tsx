@@ -135,7 +135,7 @@ export function AboutPage() {
       {/* Footer links */}
       <div className="flex items-center gap-4">
         <a
-          href="https://github.com/Pratyush-Padhy/emotion-detection-cnn"
+          href="https://github.com/Pratyushpad27/Face-Pulse"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 text-[13px] text-text-secondary hover:text-text-primary transition-colors duration-150"
