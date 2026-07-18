@@ -4,8 +4,9 @@ Accepts base64 JPEG frames, runs Haar cascade face detection + VGG16 inference.
 """
 
 import base64
+import logging
 import os
-import random
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -13,7 +14,8 @@ from typing import Optional
 import cv2
 import numpy as np
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -21,11 +23,18 @@ from model_loader import EmotionModelLoader
 
 load_dotenv()
 
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logger = logging.getLogger("emotion_api")
+
 _DEFAULT_MODEL = str(Path(__file__).resolve().parent.parent.parent / "best_vgg_model.h5")
 MODEL_PATH: str = os.getenv("MODEL_PATH", _DEFAULT_MODEL)
 CORS_ORIGIN: str = os.getenv("CORS_ORIGIN", "*")
 
-DEMO_EMOTION_LABELS: list[str] = ["angry", "fear", "happy", "sad", "surprise"]
+MAX_UPLOAD_BYTES: int = 5 * 1024 * 1024  # 5 MB multipart upload cap
+MAX_BASE64_CHARS: int = 7_000_000  # ~5 MB decoded
 
 FACE_CASCADE = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
@@ -33,27 +42,34 @@ FACE_CASCADE = cv2.CascadeClassifier(
 
 emotion_model: Optional[EmotionModelLoader] = None
 
+# Neither CascadeClassifier.detectMultiScale nor Keras Model.predict is
+# thread-safe, and run_in_threadpool may run requests on different threads.
+_detection_lock = threading.Lock()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global emotion_model
-    print("=" * 50)
-    print("Starting Emotion Detection API")
-    print("=" * 50)
+    logger.info("Starting Emotion Detection API")
     try:
         emotion_model = EmotionModelLoader(MODEL_PATH)
-        print("Model ready.")
-    except Exception as e:
-        print(f"WARNING: Could not load model — running in demo mode.\nReason: {e}")
+        # Warm-up: pay the TF graph-build cost now, not on the first request.
+        emotion_model.predict(np.zeros((48, 48), dtype=np.uint8))
+        logger.info("Model ready.")
+    except Exception:
+        logger.exception(
+            "Could not load model from %s — detect endpoints will return 503.",
+            MODEL_PATH,
+        )
         emotion_model = None
     yield
-    print("Shutting down API.")
+    logger.info("Shutting down API.")
 
 
 app = FastAPI(
     title="Emotion Detection API",
     description="Real-time facial emotion detection powered by FER2013 CNN",
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
 
@@ -93,7 +109,7 @@ def decode_base64_image(data_url: str) -> Optional[np.ndarray]:
         img_array = np.frombuffer(img_bytes, dtype=np.uint8)
         return cv2.imdecode(img_array, cv2.IMREAD_COLOR)
     except Exception as e:
-        print(f"Image decode error: {e}")
+        logger.warning("Image decode error: %s", e)
         return None
 
 
@@ -118,11 +134,46 @@ def detect_largest_face(
     return face_resized, {"x": int(x), "y": int(y), "w": int(w), "h": int(h)}
 
 
-def mock_predictions(emotion_labels: list[str]) -> dict[str, float]:
-    """Random softmax-style predictions for demo mode."""
-    raw = [random.random() for _ in emotion_labels]
-    total = sum(raw)
-    return {label: round(v / total, 4) for label, v in zip(emotion_labels, raw)}
+def _require_model() -> EmotionModelLoader:
+    if emotion_model is None or not emotion_model.is_loaded:
+        raise HTTPException(
+            status_code=503,
+            detail="Model not loaded — detection is unavailable.",
+        )
+    return emotion_model
+
+
+def _run_detection_sync(frame: np.ndarray) -> DetectionResponse:
+    """CPU-bound detection + inference; called via run_in_threadpool."""
+    model = _require_model()
+
+    with _detection_lock:
+        face_crop, face_box = detect_largest_face(frame)
+
+        if face_crop is None:
+            return DetectionResponse(
+                emotions={label: 0.0 for label in model.emotion_labels},
+                dominant="",
+                confidence=0.0,
+                face_detected=False,
+                face_box=None,
+            )
+
+        try:
+            emotion_probs = model.predict(face_crop)
+        except Exception as e:
+            logger.exception("Inference error")
+            raise HTTPException(status_code=500, detail=f"Model inference failed: {e}")
+
+    dominant = max(emotion_probs, key=emotion_probs.get)
+
+    return DetectionResponse(
+        emotions=emotion_probs,
+        dominant=dominant,
+        confidence=round(float(emotion_probs[dominant]), 4),
+        face_detected=True,
+        face_box=FaceBoxSchema(**face_box),
+    )
 
 
 @app.get("/api/health")
@@ -130,106 +181,39 @@ async def health() -> dict:
     return {
         "status": "ok",
         "model_loaded": emotion_model is not None and emotion_model.is_loaded,
-        "demo_mode": emotion_model is None,
     }
 
 
 @app.get("/api/model-info")
 async def model_info() -> dict:
-    if emotion_model is None or not emotion_model.is_loaded:
-        return {
-            "model": "demo_mode",
-            "classes": DEMO_EMOTION_LABELS,
-            "parameters": 0,
-            "normalization": "none",
-        }
-    return emotion_model.model_info
+    return _require_model().model_info
 
 
 @app.post("/api/detect", response_model=DetectionResponse)
 async def detect_emotion(request: DetectionRequest) -> DetectionResponse:
+    _require_model()
+
+    if len(request.image) > MAX_BASE64_CHARS:
+        raise HTTPException(status_code=413, detail="Image payload too large (max ~5MB).")
+
     frame = decode_base64_image(request.image)
     if frame is None:
         raise HTTPException(status_code=400, detail="Could not decode image data.")
 
-    face_crop, face_box = detect_largest_face(frame)
-
-    if face_crop is None:
-        labels = (
-            emotion_model.emotion_labels
-            if emotion_model and emotion_model.is_loaded
-            else DEMO_EMOTION_LABELS
-        )
-        return DetectionResponse(
-            emotions={label: 0.0 for label in labels},
-            dominant="",
-            confidence=0.0,
-            face_detected=False,
-            face_box=None,
-        )
-
-    try:
-        if emotion_model is not None and emotion_model.is_loaded:
-            emotion_probs = emotion_model.predict(face_crop)
-        else:
-            emotion_probs = mock_predictions(DEMO_EMOTION_LABELS)
-    except Exception as e:
-        print(f"Inference error: {e}")
-        raise HTTPException(status_code=500, detail=f"Model inference failed: {e}")
-
-    dominant = max(emotion_probs, key=emotion_probs.get)
-    confidence = emotion_probs[dominant]
-
-    return DetectionResponse(
-        emotions=emotion_probs,
-        dominant=dominant,
-        confidence=round(float(confidence), 4),
-        face_detected=True,
-        face_box=FaceBoxSchema(**face_box),
-    )
+    return await run_in_threadpool(_run_detection_sync, frame)
 
 
 @app.post("/api/detect-image", response_model=DetectionResponse)
 async def detect_from_image(file: UploadFile = File(...)) -> DetectionResponse:
-    contents = await file.read()
+    _require_model()
+
+    contents = await file.read(MAX_UPLOAD_BYTES + 1)
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="Image file too large (max 5MB).")
+
     img_array = np.frombuffer(contents, dtype=np.uint8)
     frame = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-
     if frame is None:
         raise HTTPException(status_code=400, detail="Could not decode image file.")
 
-    face_crop, face_box = detect_largest_face(frame)
-
-    if face_crop is None:
-        labels = (
-            emotion_model.emotion_labels
-            if emotion_model and emotion_model.is_loaded
-            else DEMO_EMOTION_LABELS
-        )
-        return DetectionResponse(
-            emotions={label: 0.0 for label in labels},
-            dominant="",
-            confidence=0.0,
-            face_detected=False,
-            face_box=None,
-        )
-
-    try:
-        if emotion_model is not None and emotion_model.is_loaded:
-            emotion_probs = emotion_model.predict(face_crop)
-        else:
-            emotion_probs = mock_predictions(DEMO_EMOTION_LABELS)
-    except Exception as e:
-        print(f"Inference error: {e}")
-        raise HTTPException(status_code=500, detail=f"Model inference failed: {e}")
-
-    dominant = max(emotion_probs, key=emotion_probs.get)
-    confidence = emotion_probs[dominant]
-
-    return DetectionResponse(
-        emotions=emotion_probs,
-        dominant=dominant,
-        confidence=round(float(confidence), 4),
-        face_detected=True,
-        face_box=FaceBoxSchema(**face_box),
-    )
+    return await run_in_threadpool(_run_detection_sync, frame)

@@ -1,5 +1,7 @@
 # Emotion Detection with Neural Networks & CNNs
 
+[![CI](https://github.com/Pratyushpad27/fer2013-emotion-detection/actions/workflows/ci.yml/badge.svg)](https://github.com/Pratyushpad27/fer2013-emotion-detection/actions/workflows/ci.yml)
+
 A deep learning project that detects **5 human emotions** from facial images using progressively more advanced neural network architectures — from a basic MLP all the way to transfer learning with VGG16.
 
 **[Live Demo](https://emotion-detec.netlify.app/)** — try it with your webcam!

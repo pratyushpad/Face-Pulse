@@ -1,0 +1,11 @@
+# Test-only dependencies — tests never load TensorFlow or the .h5 model,
+# so CI installs stay small (no tensorflow).
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+opencv-python-headless
+numpy
+pydantic>=2
+pytest
+httpx

@@ -5,9 +5,13 @@ Uses StandardScaler normalization params if available, otherwise falls back to /
 """
 
 import json
+import logging
+
 import numpy as np
 from pathlib import Path
 from typing import Optional
+
+logger = logging.getLogger("emotion_api.model_loader")
 
 IMG_SIZE: int = 48
 
@@ -35,7 +39,7 @@ class EmotionModelLoader:
                 "Make sure best_vgg_model.h5 is in the emotion-detection-cnn directory."
             )
 
-        print(f"Loading model from {self.model_path.resolve()}...")
+        logger.info("Loading model from %s...", self.model_path.resolve())
         self.model = tf.keras.models.load_model(str(self.model_path))
 
         n_classes: int = self.model.output_shape[-1]
@@ -53,17 +57,19 @@ class EmotionModelLoader:
         if norm_path.exists():
             with open(norm_path) as f:
                 self.normalization_params = json.load(f)
-            print(f"Loaded normalization params from {norm_path}")
+            logger.info("Loaded normalization params from %s", norm_path)
         else:
-            print(
-                "normalization_params.json not found — using /255 normalization.\n"
+            logger.warning(
+                "normalization_params.json not found — using /255 normalization. "
                 "Run 'python prepare_model.py' for better accuracy."
             )
 
         self.is_loaded = True
-        print(
-            f"Model loaded: {n_classes} classes → {self.emotion_labels}\n"
-            f"Total parameters: {self.model.count_params():,}"
+        logger.info(
+            "Model loaded: %d classes → %s (%s parameters)",
+            n_classes,
+            self.emotion_labels,
+            f"{self.model.count_params():,}",
         )
 
     def _preprocess(self, face_gray: np.ndarray) -> np.ndarray:
