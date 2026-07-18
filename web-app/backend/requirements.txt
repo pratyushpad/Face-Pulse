@@ -2,7 +2,8 @@ fastapi>=0.110.0
 uvicorn[standard]>=0.27.0
 python-multipart>=0.0.9
 python-dotenv>=1.0.0
-opencv-python-headless>=4.9.0
+# <5: OpenCV 5.0 removed cv2.CascadeClassifier from the main namespace
+opencv-python-headless>=4.9.0,<5
 numpy>=1.23.0
 tensorflow>=2.10.0
 scikit-learn>=1.1.0

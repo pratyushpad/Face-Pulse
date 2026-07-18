@@ -4,7 +4,8 @@ fastapi
 uvicorn[standard]
 python-multipart
 python-dotenv
-opencv-python-headless
+# <5: OpenCV 5.0 removed cv2.CascadeClassifier from the main namespace
+opencv-python-headless<5
 numpy
 pydantic>=2
 pytest
