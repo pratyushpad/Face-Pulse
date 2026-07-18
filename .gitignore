@@ -2,9 +2,12 @@
 *.h5
 *.pkl
 
-# Data files (too large for GitHub)
+# Data files (too large for GitHub) — fetch via scripts/download_assets.py
 *.npy
 *.csv
+*.dat
+train/
+test/
 
 # Python
 __pycache__/
