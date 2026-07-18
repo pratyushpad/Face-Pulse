@@ -15,7 +15,9 @@ logger = logging.getLogger("emotion_api.model_loader")
 
 IMG_SIZE: int = 48
 
-EMOTION_LABELS_5: list[str] = ["angry", "fear", "happy", "sad", "surprise"]
+# Order matches the training labels in dataY.npy (verified empirically against
+# labeled FER2013 images with the trained checkpoints) — NOT alphabetical.
+EMOTION_LABELS_5: list[str] = ["angry", "happy", "sad", "surprise", "fear"]
 EMOTION_LABELS_7: list[str] = [
     "angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"
 ]

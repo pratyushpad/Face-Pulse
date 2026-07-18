@@ -48,7 +48,9 @@ TEST_RATIO = 0.1
 N_LABELS = 5
 IMG_WIDTH, IMG_HEIGHT = 48, 48
 
-EMOTION_LABELS = ['Angry', 'Fear', 'Happy', 'Sad', 'Surprise']
+# Index order matches dataY.npy classes — verified empirically by running the
+# trained CNN and VGG checkpoints on labeled FER2013 test images (not alphabetical).
+EMOTION_LABELS = ['Angry', 'Happy', 'Sad', 'Surprise', 'Fear']
 
 # Where to save normalization params for the web app backend
 NORM_PARAMS_PATH = Path(__file__).parent / "web-app" / "backend" / "normalization_params.json"

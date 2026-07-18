@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import main  # noqa: E402
 
-EMOTION_LABELS = ["angry", "fear", "happy", "sad", "surprise"]
+EMOTION_LABELS = ["angry", "happy", "sad", "surprise", "fear"]
 
 
 class FakeLoader:
