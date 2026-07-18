@@ -27,7 +27,7 @@ DATA_ASSETS = {
     "shape_predictor_68_face_landmarks.dat": _GCS + "shape_predictor_68_face_landmarks.dat",
 }
 
-_RELEASE = "https://github.com/Pratyushpad27/fer2013-emotion-detection/releases/download/v1.0-models/"
+_RELEASE = "https://github.com/pratyushpad/Face-Pulse/releases/download/v1.0-models/"
 
 MODEL_ASSETS = {
     "best_mlp_model.h5": _RELEASE + "best_mlp_model.h5",

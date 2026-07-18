@@ -1,6 +1,6 @@
 # Emotion Detection with Neural Networks & CNNs
 
-[![CI](https://github.com/Pratyushpad27/fer2013-emotion-detection/actions/workflows/ci.yml/badge.svg)](https://github.com/Pratyushpad27/fer2013-emotion-detection/actions/workflows/ci.yml)
+[![CI](https://github.com/pratyushpad/Face-Pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/pratyushpad/Face-Pulse/actions/workflows/ci.yml)
 
 A deep learning project that detects **5 human emotions** from facial images using progressively more advanced neural network architectures — from a basic MLP all the way to transfer learning with VGG16.
 
@@ -92,8 +92,8 @@ emotion-detection-cnn/
 
 **1. Clone the repo**
 ```bash
-git clone https://github.com/Pratyushpad27/fer2013-emotion-detection.git
-cd fer2013-emotion-detection
+git clone https://github.com/pratyushpad/Face-Pulse.git
+cd Face-Pulse
 ```
 
 **2. Download data + pretrained models**
