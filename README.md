@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/pratyushpad/Face-Pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/pratyushpad/Face-Pulse/actions/workflows/ci.yml)
 
-A deep learning project that detects **5 human emotions** from facial images using progressively more advanced neural network architectures — from a basic MLP all the way to transfer learning with VGG16.
+A deep learning project that detects **5 human emotions** from facial images using progressively more advanced neural network architectures, from a basic MLP all the way to transfer learning with VGG16.
 
-**[Live Demo](https://face-pulse.netlify.app/)** — try it with your webcam!
+**[Live Demo](https://face-pulse.netlify.app/)**: try it with your webcam!
 
 ## Emotions Detected
 Angry · Happy · Sad · Surprise · Fear
@@ -26,8 +26,8 @@ Measured with `python eval_models.py` on 2,000 samples (10% held-out validation 
 
 Real-time emotion detection app with live webcam analysis:
 
-- **Frontend**: React + TypeScript + Vite + Tailwind CSS + Framer Motion + Chart.js — deployed on Netlify. The live demo runs fully in the browser using face-api.js, so it works without a server.
-- **Backend**: FastAPI + OpenCV (Haar cascade face detection) + TensorFlow (VGG16 inference) — a self-hostable API (Dockerfile included) serving the models trained in this repo. Not used by the hosted demo.
+- **Frontend**: React + TypeScript + Vite + Tailwind CSS + Framer Motion + Chart.js, deployed on Netlify. The live demo runs fully in the browser using face-api.js, so it works without a server.
+- **Backend**: FastAPI + OpenCV (Haar cascade face detection) + TensorFlow (VGG16 inference), a self-hostable API (Dockerfile included) serving the models trained in this repo. Not used by the hosted demo.
 
 Features:
 - Real-time webcam emotion detection with face bounding box overlay
@@ -45,7 +45,7 @@ Features:
 | VGG16 Transfer Learning | 48x48 images | Pretrained ImageNet model with 2-phase fine-tuning (block4 + block5 unfrozen) |
 
 ## Dataset
-[FER2013](https://www.kaggle.com/datasets/msambare/fer2013) — Facial Expression Recognition dataset containing 35,000+ grayscale face images across 7 emotion categories (this project uses 5).
+[FER2013](https://www.kaggle.com/datasets/msambare/fer2013): Facial Expression Recognition dataset containing 35,000+ grayscale face images across 7 emotion categories (this project uses 5).
 
 ## Tech Stack
 
@@ -103,7 +103,7 @@ python scripts/download_assets.py --models   # .npy arrays, dlib .dat, .h5 check
 (FER2013 train/test image folders, if you want them, come from
 [Kaggle](https://www.kaggle.com/datasets/msambare/fer2013): `kaggle datasets download -d msambare/fer2013`.)
 
-**3. Train the models** (optional — pretrained checkpoints available via step 2)
+**3. Train the models** (optional; pretrained checkpoints available via step 2)
 ```bash
 pip install tensorflow numpy pandas scikit-learn opencv-python matplotlib seaborn dlib
 python model.py
@@ -130,22 +130,22 @@ npm run dev
 Open `http://localhost:5175` in your browser.
 
 ## Key Takeaways
-- The CNN and the fine-tuned VGG16 land within 0.2 points of each other (64.5% vs 64.3%) — see the Results table above for the measured numbers
+- The CNN and the fine-tuned VGG16 land within 0.2 points of each other (64.5% vs 64.3%); see the Results table above for the measured numbers
 - StandardScaler normalization matched between training and inference for consistent predictions
 - Data augmentation (rotation, shifts, flips, zoom) to combat FER2013 label noise
 
 ## What I Learned
-- Flattening images into vectors loses all spatial information — that's why my MLP on raw pixels performed the worst
+- Flattening images into vectors loses all spatial information, which is why my MLP on raw pixels performed the worst
 - Two-phase fine-tuning made a huge difference: freezing VGG16 first, then unfreezing the last 2 blocks with a 10x lower LR to avoid blowing away the pretrained weights
-- FER2013 labels are noisy (some images are mislabeled) — data augmentation helped the model generalize instead of memorizing bad labels
-- Getting training normalization to match inference normalization was a pain — I had to export the StandardScaler params to JSON and load them in the backend
-- Output-index order matters: the checkpoints' class order wasn't alphabetical, and I only caught the mislabeling by running the trained models against labeled test images — always verify the label mapping empirically
+- FER2013 labels are noisy (some images are mislabeled); data augmentation helped the model generalize instead of memorizing bad labels
+- Getting training normalization to match inference normalization was a pain: I had to export the StandardScaler params to JSON and load them in the backend
+- Output-index order matters: the checkpoints' class order wasn't alphabetical, and I only caught the mislabeling by running the trained models against labeled test images. Always verify the label mapping empirically
 - Packaging a TensorFlow backend in Docker means thinking about model file size (~157MB) and cold-start time up front
-- Canvas overlay rendering at 60fps while simultaneously capturing frames for inference every 500ms — had to be careful with requestAnimationFrame vs setInterval
+- Canvas overlay rendering at 60fps while simultaneously capturing frames for inference every 500ms meant being careful with requestAnimationFrame vs setInterval
 
 ## Author
-Pratyush Padhy — UCI CS '28
-[GitHub](https://github.com/Pratyushpad27) · [LinkedIn](https://www.linkedin.com/in/pratyush-padhy-b7017a269/)
+Pratyush Padhy, UCI CS '28
+[GitHub](https://github.com/pratyushpad) · [LinkedIn](https://www.linkedin.com/in/pratyush-padhy-b7017a269/)
 
 ## Training Curves & Confusion Matrices
 
