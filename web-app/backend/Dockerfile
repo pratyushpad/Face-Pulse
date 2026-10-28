@@ -2,9 +2,10 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# System deps for OpenCV headless
+# System deps for OpenCV headless (no libGL needed; libgl1-mesa-glx no
+# longer exists in the Debian 12+ base images)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx libglib2.0-0 && \
+    libglib2.0-0 && \
     rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
