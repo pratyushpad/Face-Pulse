@@ -145,7 +145,7 @@ Open `http://localhost:5175` in your browser.
 
 ## Author
 Pratyush Padhy, UCI CS '28
-[GitHub](https://github.com/pratyushpad) · [LinkedIn](https://www.linkedin.com/in/pratyush-padhy-b7017a269/)
+[GitHub](https://github.com/pratyushpad) · [LinkedIn](https://www.linkedin.com/in/pratyushpad)
 
 ## Training Curves & Confusion Matrices
 
