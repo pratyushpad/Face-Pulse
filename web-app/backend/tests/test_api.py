@@ -54,7 +54,7 @@ def test_detect_no_face(client_loaded):
     body = r.json()
     assert body["face_detected"] is False
     assert body["dominant"] == ""
-    assert set(body["emotions"]) == {"angry", "fear", "happy", "sad", "surprise"}
+    assert set(body["emotions"]) == {"angry", "happy", "neutral", "sad", "surprise"}
 
 
 def test_detect_happy_path(client_loaded, monkeypatch):

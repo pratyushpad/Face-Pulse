@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import main  # noqa: E402
 
-EMOTION_LABELS = ["angry", "happy", "sad", "surprise", "fear"]
+EMOTION_LABELS = ["angry", "happy", "sad", "surprise", "neutral"]
 
 
 class FakeLoader:
@@ -34,7 +34,7 @@ class FakeLoader:
     }
 
     def predict(self, face_gray):
-        return {"angry": 0.05, "fear": 0.05, "happy": 0.8, "sad": 0.05, "surprise": 0.05}
+        return {"angry": 0.05, "neutral": 0.05, "happy": 0.8, "sad": 0.05, "surprise": 0.05}
 
 
 @pytest.fixture
